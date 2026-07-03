@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VinuCare – Veterinary & Pet Care</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/css/base.css">
+<link rel="stylesheet" href="src/css/nav-footer.css">
+<link rel="stylesheet" href="src/css/home.css">
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<nav>
+  <a class="logo" onclick="showPage('home')">
+    <div class="logo-mark">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="10" fill="url(#navGrad)"/>
+        <defs>
+          <linearGradient id="navGrad" x1="0" y1="0" x2="40" y2="40">
+            <stop offset="0%" stop-color="#7C5CE8"/>
+            <stop offset="100%" stop-color="#4F2FBD"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="20" cy="23" rx="7" ry="6" fill="white" opacity="0.95"/>
+        <circle cx="13.5" cy="17" r="2.6" fill="white" opacity="0.9"/>
+        <circle cx="26.5" cy="17" r="2.6" fill="white" opacity="0.9"/>
+        <circle cx="17" cy="15" r="2.2" fill="white" opacity="0.9"/>
+        <circle cx="23" cy="15" r="2.2" fill="white" opacity="0.9"/>
+        <rect x="19" y="20.5" width="2" height="5" rx="1" fill="url(#navGrad)" opacity="0.7"/>
+        <rect x="17.5" y="22" width="5" height="2" rx="1" fill="url(#navGrad)" opacity="0.7"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">Vinu<span>Care</span></div>
+      <span class="logo-sub">Veterinary &amp; Pet Care</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a onclick="showPage('home')"         id="nav-home"         class="active">Home</a></li>
+    <li><a onclick="showPage('services')"     id="nav-services">Services</a></li>
+    <li><a onclick="showPage('appointments')" id="nav-appointments">Appointments</a></li>
+    <li><a onclick="showPage('shop')"         id="nav-shop">Shop</a></li>
+    <li><a onclick="showPage('reviews')"      id="nav-reviews">Reviews</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-cta" onclick="showPage('appointments')">Book Now</button>
+    <button class="nav-cart-btn" onclick="showPage('shop')" title="View Cart">
+      🛒<span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a onclick="showPage('home');toggleMenu()"         id="m-home">🏠 Home</a>
+  <a onclick="showPage('services');toggleMenu()"     id="m-services">🐾 Services</a>
+  <a onclick="showPage('appointments');toggleMenu()" id="m-appointments">📅 Appointments</a>
+  <a onclick="showPage('shop');toggleMenu()"         id="m-shop">🛍️ Shop</a>
+  <a onclick="showPage('reviews');toggleMenu()"      id="m-reviews">⭐ Reviews</a>
+</div>
+
+
+<div id="app">
+
+<!-- ════════════════════════════
+     HOME PAGE
+════════════════════════════ -->
+<div id="page-home" class="page active">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-badge">🟢 Now Accepting New Patients</div>
+      <h1>Expert Veterinary &amp; Pet Care You Can <em>Trust</em></h1>
+      <p>Comprehensive health services, grooming, boarding and a curated pet store — all under one compassionate roof.</p>
+      <div class="hero-btns">
+        <button class="btn btn-primary" onclick="showPage('appointments')">Book an Appointment</button>
+        <button class="btn btn-white" onclick="showPage('services')">Our Services</button>
+      </div>
+      <div class="hero-trust">
+        <div class="trust-avatars">
+          <img src="" alt="">
+          <img src="" alt="">
+          <img src="" alt="">
+        </div>
+        <div class="trust-text">
+          <p>Trusted by 5,000+ Pet Families</p>
+          <span>⭐⭐⭐⭐⭐ 4.9 average rating</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-float-card">
+      <div class="float-card">
+        <div class="float-card-img"><img src="" alt="Vet"></div>
+        <div class="float-card-text"><strong>Dr. Amara Silva</strong><span>Lead Veterinarian</span></div>
+        <div class="float-dot" style="background:#8BF5C8"></div>
+      </div>
+      <div class="float-card">
+        <div class="float-card-img"><img src="" alt="Dog checkup"></div>
+        <div class="float-card-text"><strong>Checkup Done ✓</strong><span>Buddy the Labrador</span></div>
+        <div class="float-dot" style="background:var(--lavender-300)"></div>
+      </div>
+      <div class="float-card">
+        <div class="float-card-img"><img src="" alt="Cat care"></div>
+        <div class="float-card-text"><strong>Next: Grooming</strong><span>Today at 2:30 PM</span></div>
+        <div class="float-dot" style="background:#FFD96E"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST STRIP -->
+  <div class="trust-strip">
+    <div class="trust-item"><div class="trust-icon">🩺</div><div><strong>Licensed Vets</strong><span>Board-certified professionals</span></div></div>
+    <div class="trust-item"><div class="trust-icon">🏥</div><div><strong>Full Clinic</strong><span>On-site lab &amp; diagnostics</span></div></div>
+    <div class="trust-item"><div class="trust-icon">🕐</div><div><strong>Emergency Care</strong><span>24/7 urgent support</span></div></div>
+    <div class="trust-item"><div class="trust-icon">✅</div><div><strong>Certified Groomers</strong><span>5+ years experience</span></div></div>
+    <div class="trust-item"><div class="trust-icon">🚗</div><div><strong>Free Pick-up</strong><span>Within 10km radius</span></div></div>
+  </div>
+
+  <!-- ABOUT -->
+  <section class="about-section">
+    <div class="about-img-wrap">
+      <div class="about-main-img">
+        <img src="" alt="Veterinarian examining dog" loading="lazy">
+      </div>
+      <div class="about-accent-img">
+        <img src="" alt="Pet care" loading="lazy">
+      </div>
+      <div class="about-badge"><div class="num">8+</div><div class="lbl">Years of Care</div></div>
+    </div>
+    <div class="about-text">
+      <span class="pill-tag">About VinuCare</span>
+      <h2>A Clinic That Feels Like <em>Home</em> for Your Pet</h2>
+      <p>Founded in 2016, VinuCare is a full-service veterinary clinic and pet care centre dedicated to the health and happiness of every animal that walks through our doors.</p>
+      <p>Our team of licensed veterinarians, certified groomers and experienced caregivers work together to provide compassionate, evidence-based care for dogs, cats, birds, fish and small animals.</p>
+      <div class="about-checks">
+        <div class="check-item"><div class="check-icon">✓</div>Fully equipped diagnostic laboratory</div>
+        <div class="check-item"><div class="check-icon">✓</div>AVMA-accredited veterinary practice</div>
+        <div class="check-item"><div class="check-icon">✓</div>Certified professional grooming suite</div>
+        <div class="check-item"><div class="check-icon">✓</div>Climate-controlled boarding facility</div>
+        <div class="check-item"><div class="check-icon">✓</div>Fear-free certified environment</div>
+      </div>
+      <button class="btn btn-primary" onclick="showPage('appointments')">Schedule a Visit</button>
+    </div>
+  </section>
+
+  <!-- SERVICES OVERVIEW -->
+  <section class="services-section">
+    <div class="section-header">
+      <span class="pill-tag">Our Services</span>
+      <h2>Complete Care for Every Pet</h2>
+      <p>From routine wellness exams to specialist treatments, we cover every aspect of your pet's health and wellbeing.</p>
+    </div>
+    <div class="services-grid">
+      <div class="svc-card" onclick="showPage('services')">
+        <div class="svc-img">
+          <img src="" alt="Veterinary checkup" loading="lazy">
+          <div class="svc-img-overlay"></div>
+          <span class="svc-img-badge">Most Popular</span>
+        </div>
+        <div class="svc-body"><h3>Veterinary Check-ups</h3><p>Comprehensive wellness exams, vaccinations, blood panels and preventive care from our licensed vets.</p><span class="svc-link" onclick="showPage('services')">View Service →</span></div>
+      </div>
+      <div class="svc-card" onclick="showPage('services')">
+        <div class="svc-img">
+          <img src="" alt="Dog grooming" loading="lazy">
+          <div class="svc-img-overlay"></div>
+        </div>
+        <div class="svc-body"><h3>Grooming &amp; Styling</h3><p>Professional bathing, breed-specific cuts, nail trimming and ear cleaning using premium pet-safe products.</p><span class="svc-link">View Service →</span></div>
+      </div>
+      <div class="svc-card" onclick="showPage('services')">
+        <div class="svc-img">
+          <img src="" alt="Pet boarding" loading="lazy">
+          <div class="svc-img-overlay"></div>
+        </div>
+        <div class="svc-body"><h3>Boarding &amp; Daycare</h3><p>Safe, comfortable stays with 24/7 supervision, individual playtime and daily photo updates to keep you connected.</p><span class="svc-link">View Service →</span></div>
+      </div>
+      <div class="svc-card" onclick="showPage('services')">
+        <div class="svc-img">
+          <img src="" alt="Dog training" loading="lazy">
+          <div class="svc-img-overlay"></div>
+        </div>
+        <div class="svc-body"><h3>Training &amp; Behaviour</h3><p>Positive reinforcement training for puppies and adults — obedience, socialisation and behaviour correction.</p><span class="svc-link">View Service →</span></div>
+      </div>
+      <div class="svc-card" onclick="showPage('services')">
+        <div class="svc-img">
+          <img src="" alt="Cat wellness spa" loading="lazy">
+          <div class="svc-img-overlay"></div>
+        </div>
+        <div class="svc-body"><h3>Spa &amp; Wellness</h3><p>Aromatherapy baths, therapeutic massage, mud treatments and paw care for a fully pampered companion.</p><span class="svc-link">View Service →</span></div>
+      </div>
+      <div class="svc-card" onclick="showPage('services')">
+        <div class="svc-img">
+          <img src="" alt="Emergency vet care" loading="lazy">
+          <div class="svc-img-overlay"></div>
+          <span class="svc-img-badge">24/7 Available</span>
+        </div>
+        <div class="svc-body"><h3>Emergency Care</h3><p>Rapid response emergency consultations with on-site diagnostic equipment and intensive care facilities.</p><span class="svc-link">View Service →</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats-section">
+    <div class="stats-inner">
+      <div class="stats-left">
+        <div class="stat-item"><div class="stat-num">5K+</div><div class="stat-label">Pet Families Served</div></div>
+        <div class="stat-item"><div class="stat-num">14</div><div class="stat-label">Expert Clinicians</div></div>
+        <div class="stat-item"><div class="stat-num">98%</div><div class="stat-label">Satisfaction Rate</div></div>
+        <div class="stat-item"><div class="stat-num">8yr</div><div class="stat-label">Years Established</div></div>
+      </div>
+      <div class="stats-right">
+        <h2>A Clinic Built Around Your Pet's Wellbeing</h2>
+        <p>Since 2016 we've grown from a small practice into a full-service veterinary centre trusted by thousands of families across the region.</p>
+        <div class="stats-img-row">
+          <div class="stats-img-thumb"><img src="" alt="" loading="lazy"></div>
+          <div class="stats-img-thumb"><img src="" alt="" loading="lazy"></div>
+          <div class="stats-img-thumb"><img src="" alt="" loading="lazy"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section class="team-section">
+    <div class="section-header">
+      <span class="pill-tag">Our Team</span>
+      <h2>Meet Our Veterinary Professionals</h2>
+      <p>A dedicated team of certified vets, groomers and carers who treat your pets as their own.</p>
+    </div>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-photo">
+          <img src="" alt="Dr. Amara Silva" loading="lazy">
+          <div class="team-overlay"><span class="team-specialty">Lead Veterinarian</span></div>
+        </div>
+        <div class="team-body"><h3>Dr. Amara Silva</h3><p>DVM · Small Animal Medicine · 12 yrs experience</p></div>
+      </div>
+      <div class="team-card">
+        <div class="team-photo">
+          <img src="" alt="Dr. James Okafor" loading="lazy">
+          <div class="team-overlay"><span class="team-specialty">Surgeon</span></div>
+        </div>
+        <div class="team-body"><h3>Dr. James Okafor</h3><p>DVM · Veterinary Surgery · 9 yrs experience</p></div>
+      </div>
+      <div class="team-card">
+        <div class="team-photo">
+          <img src="" alt="Dr. Priya Mendis" loading="lazy">
+          <div class="team-overlay"><span class="team-specialty">Internal Medicine</span></div>
+        </div>
+        <div class="team-body"><h3>Dr. Priya Mendis</h3><p>BVSc · Internal Medicine · 7 yrs experience</p></div>
+      </div>
+      <div class="team-card">
+        <div class="team-photo">
+          <img src="" alt="Dr. Marco Santos" loading="lazy">
+          <div class="team-overlay"><span class="team-specialty">Exotic Pets</span></div>
+        </div>
+        <div class="team-body"><h3>Dr. Marco Santos</h3><p>DVM · Exotic &amp; Avian Care · 6 yrs experience</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OFFERS -->
+  <section class="offers-section">
+    <div class="section-header">
+      <span class="pill-tag">Special Offers</span>
+      <h2>Current Promotions</h2>
+      <p>Exclusive deals for new and returning pet families.</p>
+    </div>
+    <div class="offers-grid">
+      <div class="offer-card" onclick="showPage('appointments')">
+        <div class="offer-img"><img src="" alt="New patient offer" loading="lazy"><div class="offer-ribbon">New Patients</div></div>
+        <div class="offer-body"><h3>First Wellness Exam</h3><p>Complete health check, vaccination review and microchipping for new patients.</p><div class="offer-price"><strong>$29</strong><s>$75</s></div></div>
+      </div>
+      <div class="offer-card" onclick="showPage('appointments')">
+        <div class="offer-img"><img src="" alt="Grooming package" loading="lazy"><div class="offer-ribbon">Bundle Deal</div></div>
+        <div class="offer-body"><h3>Grooming + Dental Clean</h3><p>Full grooming session combined with professional dental scaling for a healthy, fresh pup.</p><div class="offer-price"><strong>$65</strong><s>$110</s></div></div>
+      </div>
+      <div class="offer-card" onclick="showPage('appointments')">
+        <div class="offer-img"><img src="" alt="Boarding offer" loading="lazy"><div class="offer-ribbon">Monthly Special</div></div>
+        <div class="offer-body"><h3>5-Night Boarding</h3><p>5 nights of supervised boarding with daily enrichment activities and bedtime story updates.</p><div class="offer-price"><strong>$149</strong><s>$220</s></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY CHOOSE US -->
+  <section style="padding:100px 5%;">
+    <div class="why-inner">
+      <div class="why-img-stack">
+        <div class="why-img-main"><img src="" alt="Vet with pet owner" loading="lazy"></div>
+        <div class="why-img-sub"><img src="" alt="Happy dog" loading="lazy"></div>
+      </div>
+      <div>
+        <span class="pill-tag">Why VinuCare</span>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,2.8rem);margin-bottom:12px;line-height:1.15;">The Standard of Care Your Pet Deserves</h2>
+        <p style="color:var(--text-light);margin-bottom:4px;line-height:1.8;">We combine clinical excellence with genuine compassion — because your pet's comfort matters as much as their health.</p>
+        <div class="why-features">
+          <div class="why-feat"><div class="why-feat-icon">🩺</div><div><h4>Fear-Free Certified</h4><p>Our protocols are designed to reduce anxiety and create positive vet experiences.</p></div></div>
+          <div class="why-feat"><div class="why-feat-icon">🧬</div><div><h4>In-House Diagnostics</h4><p>On-site blood work, urinalysis and imaging for same-day results.</p></div></div>
+          <div class="why-feat"><div class="why-feat-icon">📱</div><div><h4>Digital Health Records</h4><p>Access your pet's full health history, prescriptions and reports anytime online.</p></div></div>
+          <div class="why-feat"><div class="why-feat-icon">💬</div><div><h4>Post-Visit Follow-Up</h4><p>Our team checks in after every appointment to ensure your pet is recovering well.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOME REVIEWS -->
+  <section class="home-reviews-section" style="background:var(--off-white);">
+    <div class="section-header">
+      <span class="pill-tag">Testimonials</span>
+      <h2>What Pet Parents Say About Us</h2>
+    </div>
+    <div class="reviews-row">
+      <div class="rev-card">
+        <div class="rev-header"><div class="rev-avatar"><img src="" alt="Sarah"></div><div><div class="rev-name">Sarah M.</div><div class="rev-pet">Labrador Owner</div></div></div>
+        <div class="rev-stars">⭐⭐⭐⭐⭐</div>
+        <p class="rev-text">Max looks incredible after every grooming session. The staff is so gentle and clearly loves animals.</p>
+        <div class="rev-pet-photo"><img src="" alt="Labrador" loading="lazy"></div>
+        <span class="rev-service">Grooming</span>
+      </div>
+      <div class="rev-card">
+        <div class="rev-header"><div class="rev-avatar"><img src="" alt="James"></div><div><div class="rev-name">James K.</div><div class="rev-pet">Persian Cat Owner</div></div></div>
+        <div class="rev-stars">⭐⭐⭐⭐⭐</div>
+        <p class="rev-text">Luna used to be terrified of vets. VinuCare changed everything with their calm, patient approach.</p>
+        <div class="rev-pet-photo"><img src="" alt="Persian cat" loading="lazy"></div>
+        <span class="rev-service">Vet Check-up</span>
+      </div>
+      <div class="rev-card">
+        <div class="rev-header"><div class="rev-avatar"><img src="" alt="Priya"></div><div><div class="rev-name">Priya R.</div><div class="rev-pet">Bunny Owner</div></div></div>
+        <div class="rev-stars">⭐⭐⭐⭐⭐</div>
+        <p class="rev-text">5-night boarding and I got daily photo updates. Coco came home happy, healthy and well-loved!</p>
+        <div class="rev-pet-photo"><img src="" alt="Bunny" loading="lazy"></div>
+        <span class="rev-service">Boarding</span>
+      </div>
+    </div>
+    <div style="text-align:center"><button class="btn btn-outline" onclick="showPage('reviews')">Read All Reviews →</button></div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact-section">
+    <div class="section-header">
+      <span class="pill-tag">Find Us</span>
+      <h2>Visit Our Clinic</h2>
+      <p>Conveniently located with ample parking. Walk-ins welcome for urgent care.</p>
+    </div>
+    <div class="contact-inner">
+      <div>
+        <div class="contact-map">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.9!2d79.8612!3d6.9271!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae259251b02d4b7%3A0x3d5b0b0b0b0b0b0b!2sPet+Care+Clinic!5e0!3m2!1sen!2slk!4v1700000000000"
+            width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade" title="VinuCare Location">
+          </iframe>
+        </div>
+        <div class="contact-clinic-img">
+          <img src="" alt="Clinic interior" loading="lazy">
+        </div>
+      </div>
+      <div class="contact-info">
+        <h2>Get in Touch</h2>
+        <p>We're here to answer questions, schedule appointments and support you every step of the way.</p>
+        <div class="contact-items">
+          <div class="contact-item"><div class="contact-item-icon">📍</div><div><strong>Address</strong><span>123 Paw Street, Pet City, LK 10100</span></div></div>
+          <div class="contact-item"><div class="contact-item-icon">📞</div><div><strong>Phone</strong><span>+94 11 234 5678</span></div></div>
+          <div class="contact-item"><div class="contact-item-icon">✉️</div><div><strong>Email</strong><span>hello@vinucare.lk</span></div></div>
+          <div class="contact-item"><div class="contact-item-icon">🕐</div><div><strong>Hours</strong><span>Mon–Sat 8AM–7PM · Sun 9AM–3PM</span></div></div>
+          <div class="contact-item"><div class="contact-item-icon">🚨</div><div><strong>Emergency</strong><span>24/7 Urgent Care Line: +94 77 999 0000</span></div></div>
+        </div>
+        <button class="btn btn-primary" onclick="showPage('appointments')">Book Appointment →</button>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page-home -->
+
+</div><!-- /#app -->
+
+<!-- FOOTER -->
+<footer class="site-footer" id="siteFooter">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a class="logo" onclick="showPage('home')">
+        <div class="logo-mark">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="10" fill="url(#footGrad)"/>
+            <defs><linearGradient id="footGrad" x1="0" y1="0" x2="40" y2="40"><stop offset="0%" stop-color="#7C5CE8"/><stop offset="100%" stop-color="#4F2FBD"/></linearGradient></defs>
+            <ellipse cx="20" cy="23" rx="7" ry="6" fill="white" opacity="0.9"/>
+            <circle cx="13.5" cy="17" r="2.6" fill="white" opacity="0.85"/>
+            <circle cx="26.5" cy="17" r="2.6" fill="white" opacity="0.85"/>
+            <circle cx="17" cy="15" r="2.2" fill="white" opacity="0.85"/>
+            <circle cx="23" cy="15" r="2.2" fill="white" opacity="0.85"/>
+          </svg>
+        </div>
+        <div><div class="logo-text">Vinu<span>Care</span></div><span class="logo-sub">Veterinary &amp; Pet Care</span></div>
+      </a>
+      <p>Providing loving, professional veterinary care and pet services since 2016. Because every pet deserves to be treated like family.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Services</h4>
+      <ul>
+        <li><a onclick="showPage('services')">Veterinary Care</a></li>
+        <li><a onclick="showPage('services')">Grooming</a></li>
+        <li><a onclick="showPage('services')">Boarding</a></li>
+        <li><a onclick="showPage('services')">Training</a></li>
+        <li><a onclick="showPage('services')">Emergency Care</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a onclick="showPage('home')">Home</a></li>
+        <li><a onclick="showPage('shop')">Pet Shop</a></li>
+        <li><a onclick="showPage('appointments')">Book Appointment</a></li>
+        <li><a onclick="showPage('reviews')">Reviews</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <ul>
+        <li><a>📍 123 Paw Street, Pet City</a></li>
+        <li><a>📞 +94 11 234 5678</a></li>
+        <li><a>✉️ hello@vinucare.lk</a></li>
+        <li><a>🕐 Mon–Sat: 8AM – 7PM</a></li>
+        <li><a>🚨 Emergency: +94 77 999 0000</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 VinuCare Veterinary &amp; Pet Care. All rights reserved.</span>
+    <span>Made with 💜 for pets everywhere</span>
+  </div>
+</footer>
+
+<script src="src/js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+/* ═══════════════════════════════
+   BASE.CSS — resets, design tokens,
+   page system & shared utility classes
+   (used across every VinuCare page)
+═══════════════════════════════ */
+
+/* ═══ RESET & VARS ═══ */
+:root {
+  --white:#FFFFFF;
+  --off-white:#F8F6FF;
+  --lavender-50:#F3EFFE;
+  --lavender-100:#E8DFFE;
+  --lavender-200:#D3C4FD;
+  --lavender-300:#B59EF8;
+  --lavender-400:#9B7EF4;
+  --lavender-500:#7C5CE8;
+  --lavender-600:#6441D4;
+  --lavender-700:#4F2FBD;
+  --purple-deep:#2D1B69;
+  --text-dark:#1A1035;
+  --text-mid:#4A3F6B;
+  --text-light:#8B7BAD;
+  --border:#E5DAFA;
+  --border-light:#F0EAFF;
+  --shadow-xs:rgba(100,65,212,0.06);
+  --shadow-sm:rgba(100,65,212,0.10);
+  --shadow-md:rgba(100,65,212,0.18);
+  --shadow-lg:rgba(100,65,212,0.26);
+  --nav-h:72px;
+  --radius-sm:12px;
+  --radius-md:20px;
+  --radius-lg:28px;
+  --radius-xl:36px;
+  --transition:0.30s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--white);
+  color:var(--text-dark);
+  line-height:1.65;
+  overflow-x:hidden;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+}
+
+/* ═══ PAGE SYSTEM ═══ */
+#app{flex:1;position:relative;}
+.page{display:none;min-height:calc(100vh - var(--nav-h));padding-top:var(--nav-h);flex-direction:column;}
+.page.active{display:flex;animation:pageIn .32s cubic-bezier(0.4,0,0.2,1) forwards;}
+.page.exit{animation:pageOut .32s cubic-bezier(0.4,0,0.2,1) forwards;}
+@keyframes pageIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pageOut{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(-8px);}}
+
+/* ═══ SHARED ═══ */
+.pill-tag{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--lavender-100);color:var(--lavender-600);padding:5px 16px;border-radius:20px;margin-bottom:16px;}
+.section-header{text-align:center;margin-bottom:56px;}
+.section-header h2{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3rem);color:var(--text-dark);margin-bottom:10px;line-height:1.15;}
+.section-header p{color:var(--text-light);max-width:520px;margin:0 auto;font-size:1rem;}
+.btn{padding:13px 32px;border-radius:40px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;border:none;transition:all .25s;text-decoration:none;display:inline-block;}
+.btn-primary{background:linear-gradient(135deg,var(--lavender-500),var(--lavender-700));color:#fff;box-shadow:0 6px 20px rgba(124,92,232,.38);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(124,92,232,.5);}
+.btn-outline{background:transparent;color:var(--lavender-600);border:2px solid var(--lavender-300);box-shadow:none;}
+.btn-outline:hover{background:var(--lavender-50);transform:translateY(-2px);}
+.btn-white{background:#fff;color:var(--lavender-700);box-shadow:0 4px 16px var(--shadow-sm);}
+.btn-white:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow-md);}
+
+/* ═══ IMAGE HELPERS ═══ */
+.img-cover{width:100%;height:100%;object-fit:cover;display:block;}
+.img-fade{animation:fadeIn .5s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}

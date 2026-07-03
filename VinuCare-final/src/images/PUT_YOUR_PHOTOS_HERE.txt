@@ -1,0 +1,6 @@
+Drop your VinuCare photos in this folder (hero shots, vet/team photos,
+pet photos, offer images, etc). The <img> tags in home.html currently
+have empty src="" attributes waiting for these.
+
+Example: if you add "hero-dog.jpg" here, update the matching tag in
+home.html to: src="src/images/hero-dog.jpg"
