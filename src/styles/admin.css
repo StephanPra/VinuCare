@@ -1,0 +1,404 @@
+/* ============================================================
+   VinuCare Admin Dashboard
+   Palette pulled from the existing site: deep indigo (#3730A3),
+   teal (#0F766E), warm gold (#B45309) — same family used for
+   service category accents on the public site, so the admin
+   area reads as part of the same product rather than a bolted-on
+   tool.
+   ============================================================ */
+
+:root {
+  --admin-ink: #1E1B2E;
+  --admin-indigo: #3730A3;
+  --admin-indigo-dark: #262168;
+  --admin-teal: #0F766E;
+  --admin-gold: #B45309;
+  --admin-rose: #B91C1C;
+  --admin-bg: #F6F5FB;
+  --admin-card: rgba(255, 255, 255, 0.72);
+  --admin-border: rgba(55, 48, 163, 0.12);
+  --admin-muted: #6B6580;
+  /* Separate "text on a surface" tokens for indigo/rose. The sidebar
+     keeps using --admin-indigo directly (a fixed, bold gradient look
+     in both themes, same idea as the site footer). These two are for
+     text/borders that sit on top of var(--white), which DOES flip
+     dark — so the text needs its own dark-mode value or it goes
+     dark-on-dark. */
+  --admin-indigo-text: var(--admin-indigo);
+  --admin-rose-text: var(--admin-rose);
+}
+
+/* Admin dashboard never had its own dark-mode remap — everything above
+   stayed fixed to its light-mode value even though the shared
+   var(--white)/var(--text-dark) tokens used inside this file DO flip,
+   which is what caused the half-dark/half-light admin UI. */
+html[data-theme="dark"] {
+  --admin-ink: #F1EDFA;
+  --admin-bg: #1B1729;
+  /* A dark-tinted glass overlay on an already-dark background just
+     deepens the same shade — no visible elevation, reads as a flat
+     black smudge. A light-tinted overlay actually lightens whatever's
+     behind it, which is what makes a card read as "raised" in dark UI. */
+  --admin-card: rgba(255, 255, 255, 0.055);
+  --admin-border: rgba(155, 142, 244, 0.28);
+  --admin-muted: #A79FC0;
+  --admin-indigo-text: #B9A6FF;
+  --admin-rose-text: #F1A3A3;
+}
+html[data-theme="dark"] .admin-stat-card,
+html[data-theme="dark"] .admin-panel {
+  /* The light-mode indigo-tinted shadow (rgba(55,48,163,.06-.07)) is too
+     faint to read against a dark background at all — needs real black
+     depth here instead. */
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+}
+html[data-theme="dark"] .admin-modal {
+  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+}
+
+#page-admin {
+  min-height: 100vh;
+  background: var(--admin-bg);
+  display: flex;
+  font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+  color: var(--admin-ink);
+}
+
+/* ---------- Sidebar ---------- */
+.admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: linear-gradient(160deg, var(--admin-indigo-dark), var(--admin-indigo) 70%);
+  color: #fff;
+  padding: 28px 18px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 0 8px 26px;
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+  margin-bottom: 18px;
+}
+.admin-brand-badge {
+  background: rgba(255,255,255,0.16);
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: .65rem;
+  letter-spacing: .06em;
+  font-weight: 700;
+}
+
+.admin-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.admin-nav-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: 12px;
+  background: transparent; border: none; color: rgba(255,255,255,0.78);
+  font-size: .92rem; font-weight: 600; text-align: left; cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.badge-nurse { background: #FCE7F3; color: #9D174D; }
+.admin-nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.admin-nav-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
+.admin-nav-icon { font-size: 1.05rem; width: 20px; text-align: center; }
+
+.admin-sidebar-footer {
+  border-top: 1px solid rgba(255,255,255,0.14);
+  padding-top: 16px; margin-top: 12px;
+  font-size: .78rem; color: rgba(255,255,255,0.65);
+}
+.admin-exit-btn {
+  margin-top: 10px; width: 100%; padding: 9px 12px;
+  border-radius: 10px; border: 1px solid rgba(255,255,255,0.28);
+  background: transparent; color: #fff; font-weight: 600;
+  font-size: .82rem; cursor: pointer;
+}
+.admin-exit-btn:hover { background: rgba(255,255,255,0.12); }
+
+/* ---------- Main content ---------- */
+.admin-main { flex: 1; padding: 30px 36px 60px; max-width: 1300px; }
+
+.admin-topbar {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 26px; flex-wrap: wrap; gap: 14px;
+}
+.admin-topbar h1 { font-size: 1.5rem; margin: 0 0 4px; }
+.admin-topbar p { margin: 0; color: var(--admin-muted); font-size: .92rem; }
+
+/* ---------- Stat cards ---------- */
+.admin-stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 30px;
+}
+.admin-stat-card {
+  background: var(--admin-card);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid var(--admin-border);
+  border-radius: 16px; padding: 18px 20px;
+  box-shadow: 0 6px 24px rgba(55,48,163,0.07);
+}
+.admin-stat-label { font-size: .78rem; color: var(--admin-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.admin-stat-value { font-size: 1.7rem; font-weight: 800; margin-top: 6px; }
+.admin-stat-sub { font-size: .78rem; margin-top: 4px; font-weight: 600; }
+.admin-stat-sub.up { color: var(--admin-teal); }
+.admin-stat-sub.down { color: var(--admin-rose); }
+
+/* ---------- Panel / card shell ---------- */
+.admin-panel {
+  background: var(--admin-card);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid var(--admin-border);
+  border-radius: 18px; padding: 22px 24px;
+  box-shadow: 0 6px 24px rgba(55,48,163,0.06);
+  margin-bottom: 24px;
+}
+.admin-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; gap: 12px; flex-wrap: wrap;
+}
+.admin-panel-head h2 { margin: 0; font-size: 1.1rem; }
+
+/* ---------- Controls ---------- */
+/* Same liquid-glass treatment as .admin-tabs/.admin-panel — these sit
+   right next to the glass tab bar in the panel head, and looked out of
+   place as flat solid boxes beside it. Shared across Admin/Nurse/Doctor
+   since AdminUsers/AdminAppointments/AdminProducts are the same
+   components in all three dashboards. */
+.admin-search {
+  padding: 9px 14px; border-radius: 10px; border: 1px solid var(--admin-border);
+  background: var(--admin-card);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  font-size: .85rem; min-width: 220px;
+  color: var(--admin-ink); transition: border-color .15s ease, box-shadow .15s ease;
+}
+.admin-search:hover { border-color: var(--admin-indigo-text); }
+.admin-search:focus {
+  outline: none;
+  border-color: var(--admin-indigo-text);
+  box-shadow: 0 0 0 3px rgba(155, 142, 244, 0.25);
+}
+.admin-select {
+  padding: 9px 12px; border-radius: 10px; border: 1px solid var(--admin-border);
+  background: var(--admin-card);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  font-size: .85rem; color: var(--admin-ink);
+  cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease;
+}
+.admin-select:hover { border-color: var(--admin-indigo-text); }
+.admin-select:focus {
+  outline: none;
+  border-color: var(--admin-indigo-text);
+  box-shadow: 0 0 0 3px rgba(155, 142, 244, 0.25);
+}
+.admin-select option, .admin-field select option {
+  background: var(--white);
+  color: var(--admin-ink);
+}
+.admin-btn {
+  padding: 10px 18px; border-radius: 10px; border: none;
+  font-weight: 700; font-size: .85rem; cursor: pointer;
+  transition: filter .15s ease, transform .05s ease;
+}
+.admin-btn:active { transform: scale(0.98); }
+.admin-btn-primary { background: var(--admin-indigo); color: #fff; }
+.admin-btn-primary:hover { filter: brightness(1.08); }
+.admin-btn-outline { background: var(--white); color: var(--admin-indigo-text); border: 1px solid var(--admin-indigo-text); }
+.admin-btn-danger { background: var(--white); color: var(--admin-rose-text); border: 1px solid var(--admin-rose-text); }
+.admin-btn-danger:hover { background: var(--admin-rose); color: #fff; }
+.admin-btn-sm { padding: 6px 12px; font-size: .78rem; border-radius: 8px; }
+
+/* ---------- Table ---------- */
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+.admin-table th {
+  text-align: left; padding: 10px 12px; color: var(--admin-muted);
+  font-weight: 700; font-size: .74rem; text-transform: uppercase;
+  letter-spacing: .04em; border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+.admin-table td {
+  padding: 12px; border-bottom: 1px solid rgba(55,48,163,0.06);
+  vertical-align: middle;
+}
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table-actions { display: flex; gap: 8px; }
+
+.admin-thumb {
+  width: 40px; height: 40px; border-radius: 8px; object-fit: cover;
+  background: var(--lavender-50); flex-shrink: 0;
+}
+.admin-cell-main { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.admin-cell-sub { color: var(--admin-muted); font-size: .78rem; }
+
+/* ---------- Badges ---------- */
+.admin-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 999px;
+  font-size: .72rem; font-weight: 700;
+}
+.badge-active, .badge-confirmed, .badge-paid { background: #DCFCE7; color: #166534; }
+.badge-pending { background: #FEF3C7; color: #92400E; }
+.badge-suspended, .badge-cancelled, .badge-failed { background: #FEE2E2; color: #991B1B; }
+.badge-onleave, .badge-refunded { background: #E0E7FF; color: #3730A3; }
+.badge-admin { background: #EDE9FE; color: #5B21B6; }
+.badge-doctor { background: #CCFBF1; color: #0F766E; }
+.badge-staff { background: #FEF3C7; color: #92400E; }
+.badge-customer { background: #E5E7EB; color: #374151; }
+
+/* ---------- Liquid-glass tab filter (replaces the old <select> filter
+   dropdowns on Users, Appointments, and Products — shared across all
+   three staff dashboards since AdminAppointments/AdminProducts are
+   reused by Nurse/Doctor) ---------- */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(124,92,232,0.14), rgba(124,92,232,0.05));
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(124,92,232,0.18);
+  box-shadow: 0 4px 18px rgba(124,92,232,0.10), inset 0 1px 0 rgba(255,255,255,0.5);
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 100%;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+.admin-tab-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--admin-muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all .2s ease;
+}
+.admin-tab-btn:hover:not(.active) {
+  background: rgba(124,92,232,0.10);
+  color: var(--lavender-600);
+}
+.admin-tab-btn.active {
+  background: linear-gradient(135deg, var(--lavender-500), var(--lavender-700));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(124,92,232,.35);
+}
+
+.admin-empty { text-align: center; padding: 36px; color: var(--admin-muted); }
+
+/* ---------- Modal ---------- */
+.admin-modal-overlay {
+  position: fixed; inset: 0; background: rgba(30,27,46,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; padding: 20px;
+}
+.admin-modal {
+  background: var(--white); border-radius: 18px; padding: 26px 28px;
+  width: 100%; max-width: 460px; max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(30,27,46,0.3);
+}
+.admin-modal h3 { margin: 0 0 18px; font-size: 1.1rem; }
+.admin-field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+.admin-field label { font-size: .78rem; font-weight: 700; color: var(--admin-muted); }
+.admin-field input, .admin-field select, .admin-field textarea {
+  padding: 10px 12px; border-radius: 9px; border: 1px solid var(--admin-border);
+  font-size: .88rem; font-family: inherit;
+  background: var(--white); color: var(--admin-ink);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.admin-field input:hover, .admin-field select:hover, .admin-field textarea:hover {
+  border-color: var(--admin-indigo-text);
+}
+.admin-field input:focus, .admin-field select:focus, .admin-field textarea:focus {
+  outline: none;
+  border-color: var(--admin-indigo-text);
+  box-shadow: 0 0 0 3px rgba(155, 142, 244, 0.25);
+}
+.admin-field textarea { resize: vertical; min-height: 64px; }
+.admin-field-row { display: flex; gap: 12px; }
+.admin-field-row .admin-field { flex: 1; }
+.admin-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.admin-image-preview {
+  width: 100%; height: 130px; border-radius: 10px; object-fit: cover;
+  background: var(--lavender-50); margin-top: 8px;
+}
+
+/* ---------- Analytics ---------- */
+.admin-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+.admin-analytics-total {
+  font-size: .85rem; font-weight: 700; color: var(--admin-indigo-text);
+}
+
+/* Small pulsing dot next to "Analytics" heading, briefly shown when a
+   live socket event triggers a data refresh — a quiet visual cue that
+   the numbers just moved, without an intrusive toast/alert. */
+.admin-live-dot {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--admin-teal); margin-left: 8px;
+  animation: admin-pulse 1.2s ease-out;
+}
+/* Steady (non-animated) dot next to "Live activity" — signals the feed
+   is connected and listening, even before anything has happened yet. */
+.admin-live-indicator {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--admin-teal); margin-left: 6px;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
+}
+@keyframes admin-pulse {
+  0%   { transform: scale(1);   opacity: 1; }
+  70%  { transform: scale(2.4); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.admin-live-feed {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 280px; overflow-y: auto;
+}
+.admin-live-feed li {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 4px; font-size: .86rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+.admin-live-feed li:last-child { border-bottom: none; }
+.admin-live-feed time { color: var(--admin-muted); font-size: .74rem; flex-shrink: 0; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  #page-admin { flex-direction: column; }
+  .admin-sidebar { width: 100%; height: auto; position: static; flex-direction: row; overflow-x: auto; padding: 14px; }
+  .admin-brand { display: none; }
+  .admin-nav { flex-direction: row; flex: none; }
+  .admin-nav-btn { white-space: nowrap; }
+  .admin-sidebar-footer { display: none; }
+  .admin-main { padding: 20px; }
+}
+@media (max-width: 560px) {
+  .admin-main { padding: 16px 14px; }
+  .admin-topbar { flex-direction: column; align-items: flex-start; }
+  .admin-panel { padding: 18px 16px; }
+  .admin-field-row { flex-direction: column; gap: 0; }
+  .admin-modal { padding: 22px 18px; }
+  .admin-panel-head .admin-search,
+  .admin-panel-head .admin-select { flex: 1 1 140px; min-width: 0; }
+  .admin-panel-head .admin-tabs { width: 100%; }
+}

@@ -1,0 +1,250 @@
+/* This whole file previously referenced var(--text-muted, ...) and
+   var(--primary, ...) — custom properties that don't exist anywhere
+   else in the codebase (the real tokens are --text-light/--text-mid and
+   --lavender-600). Since the variables were never defined, every one of
+   those rules silently used its hardcoded light-mode fallback color
+   forever, regardless of theme — this is why almost nothing on the
+   product detail page responded to dark mode. Swapped every one over
+   to the real design tokens used everywhere else in the app. */
+
+/* ===== BREADCRUMB ===== */
+.detail-breadcrumb {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 8px;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+.detail-breadcrumb span { cursor: pointer; }
+.detail-breadcrumb span:hover { color: var(--lavender-600); }
+.detail-breadcrumb .crumb-sep { margin: 0 8px; cursor: default; color: var(--text-light); }
+.detail-breadcrumb .crumb-sep:hover { color: var(--text-light); }
+.detail-breadcrumb .crumb-current { color: var(--text-dark); font-weight: 500; cursor: default; }
+.detail-breadcrumb .crumb-current:hover { color: var(--text-dark); }
+
+.detail-back-link {
+  display: block;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 14px;
+  border: none;
+  background: none;
+  color: var(--lavender-600);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.detail-back-link:hover { text-decoration: underline; }
+
+/* ===== LAYOUT ===== */
+.product-detail-page { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
+.product-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .product-detail-grid { grid-template-columns: 1fr; gap: 28px; }
+}
+
+/* ===== GALLERY ===== */
+.detail-cat-tag {
+  display: inline-block;
+  background: var(--lavender-600);
+  border: none;
+  cursor: pointer;
+  transition: background .2s ease;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 8px 18px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+.detail-cat-tag:hover { background: var(--lavender-700); }
+.detail-main-img-wrap {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--lavender-50);
+  aspect-ratio: 1 / 1;
+}
+.detail-main-img { width: 100%; height: 100%; object-fit: cover; }
+.detail-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: #e8562f;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 6px;
+}
+.detail-zoom-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin-top: 14px;
+}
+.detail-thumbs { display: flex; gap: 10px; margin-top: 14px; }
+.detail-thumb {
+  width: 64px; height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.detail-thumb.active { border-color: var(--lavender-600); }
+.detail-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ===== INFO ===== */
+.detail-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; margin: 0 0 12px; color: var(--text-dark); }
+.detail-rating-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.detail-stars { color: #f5a623; letter-spacing: 2px; font-size: 1.1rem; }
+.detail-review-count { color: var(--text-light); font-size: 0.9rem; }
+
+.detail-meta-row { display: flex; gap: 8px; padding: 6px 0; font-size: 0.95rem; }
+.meta-label { font-weight: 700; color: var(--text-dark); min-width: 120px; }
+.meta-value { color: var(--text-mid); }
+.meta-value.in-stock { color: #2fa84f; font-weight: 600; }
+
+.detail-desc { margin: 18px 0; line-height: 1.6; color: var(--text-mid); }
+
+.detail-price-block { display: flex; align-items: baseline; gap: 14px; margin-top: 10px; }
+.detail-price-old { text-decoration: line-through; color: var(--text-light); font-size: 1.1rem; }
+.detail-price-now { font-size: 1.7rem; font-weight: 700; color: #e8562f; }
+.detail-savings { color: var(--text-light); font-style: italic; margin: 4px 0 18px; }
+
+.detail-qty-label { font-weight: 700; margin: 20px 0 8px; color: var(--text-dark); }
+.detail-qty-selector {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.detail-qty-selector button {
+  width: 42px; height: 42px;
+  border: none;
+  background: var(--lavender-50);
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--lavender-600);
+}
+.detail-qty-selector button:hover { background: var(--lavender-100); }
+.detail-qty-selector input {
+  width: 52px; height: 42px;
+  text-align: center;
+  border: none;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  font-size: 1rem;
+  background: var(--white);
+  color: var(--text-dark);
+}
+
+.detail-subtotal { margin: 18px 0; font-size: 1.05rem; color: var(--text-dark); }
+
+.detail-add-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--lavender-600);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.detail-add-btn:hover { background: var(--lavender-700); transform: translateY(-1px); }
+.detail-add-btn.added { background: #2fa84f; }
+
+.detail-tags-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.detail-tag {
+  background: var(--lavender-50);
+  color: var(--text-mid);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+}
+
+/* ===== QUICK VIEW MODAL ===== */
+.quickview-overlay {
+  position: fixed; inset: 0;
+  background: rgba(30, 25, 45, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: qvFadeIn 0.2s ease;
+}
+@keyframes qvFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.quickview-modal {
+  background: var(--white);
+  border-radius: 18px;
+  max-width: 640px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+@media (max-width: 560px) {
+  .quickview-modal { grid-template-columns: 1fr; }
+}
+
+.quickview-close {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  color: #2e2a3d;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.quickview-img-wrap { position: relative; background: var(--lavender-50); aspect-ratio: 1/1; }
+.quickview-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+.quickview-info { padding: 28px 24px; display: flex; flex-direction: column; }
+.quickview-info h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; margin: 0 0 10px; color: var(--text-dark); }
+.quickview-desc { color: var(--text-mid); font-size: 0.9rem; line-height: 1.5; margin-bottom: 14px; }
+.quickview-price { font-size: 1.3rem; font-weight: 700; color: #e8562f; margin-bottom: 20px; }
+
+.quickview-actions { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+.quickview-add-btn {
+  padding: 12px;
+  background: var(--lavender-600);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.quickview-add-btn.added { background: #2fa84f; }
+.quickview-details-btn {
+  padding: 12px;
+  background: transparent;
+  color: var(--lavender-600);
+  border: 1.5px solid var(--lavender-600);
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.quickview-details-btn:hover { background: var(--lavender-50); }
