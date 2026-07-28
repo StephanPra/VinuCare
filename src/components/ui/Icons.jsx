@@ -98,6 +98,16 @@ export function BagIcon(props) {
   );
 }
 
+export function ImageIcon(props) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="8.5" cy="9.5" r="1.5" />
+      <path d="M21 15.5 16 10.5 5.5 21" />
+    </Base>
+  );
+}
+
 export function BoxIcon(props) {
   return (
     <Base {...props}>

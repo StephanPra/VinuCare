@@ -1,8 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import '../../styles/auth.css';
 import '../../styles/profile.css';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
+import { ImageIcon } from '../../components/ui/Icons';
+import Avatar from '../../components/ui/Avatar';
+import { AVATAR_PRESETS, AVATAR_PRESET_PREFIX } from '../../lib/avatarPresets';
+
+const MAX_AVATAR_BYTES = 3 * 1024 * 1024; // 3MB — base64-inflated, stays well under the 10mb JSON body limit
 
 export default function Profile({ onNavigate, setUser }) {
   const { success: notifySuccess, error: notifyError } = useUIFeedback();
@@ -25,6 +30,11 @@ export default function Profile({ onNavigate, setUser }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const avatarInputRef = useRef(null);
+  const avatarPickerRef = useRef(null);
 
   const loggedIn = !!localStorage.getItem('user');
 
@@ -60,11 +70,77 @@ export default function Profile({ onNavigate, setUser }) {
       .finally(() => setHistoryLoading(false));
   }, [loggedIn]);
 
+  useEffect(() => {
+    if (!avatarPickerOpen) return;
+    const handleClickOutside = (e) => {
+      if (avatarPickerRef.current && !avatarPickerRef.current.contains(e.target)) {
+        setAvatarPickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [avatarPickerOpen]);
+
   const cancelEdit = () => {
     setName(profile.name || '');
     setPhone(profile.phone || '');
     setEditing(false);
   };
+
+  // Shared by the name/phone save and the avatar upload below — both PUT
+  // the same /me endpoint and need to keep localStorage/Nav's `user` in
+  // sync afterwards, not just this page's own `profile` state.
+  const syncUserEverywhere = (data) => {
+    setProfile(data);
+    const stored = JSON.parse(localStorage.getItem('user') || '{}');
+    const updated = { ...stored, name: data.name, avatar: data.avatar };
+    localStorage.setItem('user', JSON.stringify(updated));
+    setUser(updated);
+  };
+
+  const saveAvatar = async (avatarValue, successMessage) => {
+    setUploadingAvatar(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: profile.name, phone: profile.phone, avatar: avatarValue }),
+      });
+      const data = await res.json();
+      if (!res.ok) { notifyError(data.message || 'Could not update photo'); return; }
+
+      syncUserEverywhere(data);
+      notifySuccess(successMessage);
+      setAvatarPickerOpen(false);
+    } catch {
+      notifyError('Cannot connect to server. Make sure the backend is running.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleAvatarPick = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // let picking the same file again re-fire onChange
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notifyError('Please choose an image file');
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      notifyError('Image is too large — please choose one under 3MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => saveAvatar(reader.result, 'Profile photo updated');
+    reader.readAsDataURL(file);
+  };
+
+  const handlePickPreset = (presetId) => saveAvatar(`${AVATAR_PRESET_PREFIX}${presetId}`, 'Profile photo updated');
+  const handleRemoveAvatar = () => saveAvatar(null, 'Profile photo removed');
 
   const saveProfile = async () => {
     if (!name.trim()) { notifyError('Name is required'); return; }
@@ -79,17 +155,8 @@ export default function Profile({ onNavigate, setUser }) {
       const data = await res.json();
       if (!res.ok) { notifyError(data.message || 'Could not save changes'); return; }
 
-      setProfile(data);
+      syncUserEverywhere(data);
       setEditing(false);
-
-      // Keep the nav/localStorage user in sync too — the name shown in
-      // the nav dropdown and greeting elsewhere is read from there, not
-      // re-fetched from the server.
-      const stored = JSON.parse(localStorage.getItem('user') || '{}');
-      const updated = { ...stored, name: data.name };
-      localStorage.setItem('user', JSON.stringify(updated));
-      setUser(updated);
-
       notifySuccess('Profile updated');
     } catch {
       notifyError('Cannot connect to server. Make sure the backend is running.');
@@ -140,13 +207,6 @@ export default function Profile({ onNavigate, setUser }) {
     );
   }
 
-  const initials = (profile.name || '?')
-    .split(' ')
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
   // Combine both payable sources (appointment fees + shop orders) into one
   // timeline. Falls back to createdAt when nothing has been paid yet, so
   // pending items still sort sensibly alongside paid ones.
@@ -178,7 +238,61 @@ export default function Profile({ onNavigate, setUser }) {
       <div className="profile-wrap">
         <div className="profile-card">
           <div className="profile-header">
-            <div className="profile-avatar">{initials}</div>
+            <div className="profile-avatar-wrap" ref={avatarPickerRef}>
+              <Avatar avatar={profile.avatar} name={profile.name} size={58} className="profile-avatar" />
+              <button
+                type="button"
+                className="profile-avatar-edit-btn"
+                onClick={() => setAvatarPickerOpen((o) => !o)}
+                disabled={uploadingAvatar}
+                title={profile.avatar ? 'Change photo' : 'Add photo'}
+                aria-label={profile.avatar ? 'Change photo' : 'Add photo'}
+              >
+                <ImageIcon size={13} />
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleAvatarPick}
+              />
+
+              {avatarPickerOpen && (
+                <div className="avatar-picker-popover">
+                  <div className="avatar-picker-title">Choose an avatar</div>
+                  <div className="avatar-picker-grid">
+                    {AVATAR_PRESETS.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className="avatar-picker-option"
+                        title={p.label}
+                        aria-label={p.label}
+                        disabled={uploadingAvatar}
+                        onClick={() => handlePickPreset(p.id)}
+                      >
+                        <Avatar avatar={`${AVATAR_PRESET_PREFIX}${p.id}`} size={38} />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="avatar-picker-divider" />
+                  <button
+                    type="button"
+                    className="avatar-picker-upload-btn"
+                    disabled={uploadingAvatar}
+                    onClick={() => avatarInputRef.current?.click()}
+                  >
+                    <ImageIcon size={14} /> Upload your own photo
+                  </button>
+                  {profile.avatar && (
+                    <button type="button" className="avatar-picker-remove-btn" onClick={handleRemoveAvatar} disabled={uploadingAvatar}>
+                      Remove photo
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
             <div>
               <h1>{profile.name}</h1>
               <span className={`profile-role-badge role-${(profile.role || 'customer').toLowerCase()}`}>

@@ -4,6 +4,7 @@ import GlassSelect from "./GlassSelect";
 import StepIndicator from "./StepIndicator";
 import DoctorPreviewCard from "./DoctorPreviewCard";
 import BookingCalendar from "./BookingCalendar";
+import Skeleton from "../../components/ui/Skeleton";
 import { API_BASE_URL } from "../../config/api";
 
 export default function AppointmentForm({ onAppointmentSuccess, initialService, initialDoctorKeyword, isLoggedIn, onRequireLogin }) {
@@ -18,6 +19,8 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
   const [bookedSlots, setBookedSlots] = useState([]);
   const [unavailableDates, setUnavailableDates] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [autoAssigned, setAutoAssigned] = useState(false);
   const [fromProfile, setFromProfile] = useState(false);
 
@@ -25,7 +28,8 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
     fetch(`${API_BASE_URL}/api/appointments/doctors`)
       .then(res => res.json())
       .then(data => setDoctors(Array.isArray(data) ? data : []))
-      .catch(() => setDoctors([]));
+      .catch(() => setDoctors([]))
+      .finally(() => setDoctorsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -66,12 +70,14 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
   // real when the booking is actually submitted (see handleSubmit).
   useEffect(() => {
     if (!formData.apptDate) { setBookedSlots([]); return; }
+    setSlotsLoading(true);
     const params = new URLSearchParams({ date: formData.apptDate });
     if (formData.doctorId) params.set('doctorId', formData.doctorId);
     fetch(`${API_BASE_URL}/api/appointments/slots?${params.toString()}`)
       .then(res => res.json())
       .then(data => setBookedSlots(Array.isArray(data) ? data : []))
-      .catch(() => setBookedSlots([]));
+      .catch(() => setBookedSlots([]))
+      .finally(() => setSlotsLoading(false));
   }, [formData.apptDate, formData.doctorId]);
 
   // A doctor's marked-unavailable days need to gray out on the calendar
@@ -222,12 +228,14 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
         if (data.code === 'SLOT_TAKEN') {
           setFormData((prev) => ({ ...prev, apptTime: '' }));
           setStep(3);
+          setSlotsLoading(true);
           const params = new URLSearchParams({ date: formData.apptDate });
           if (formData.doctorId) params.set('doctorId', formData.doctorId);
           fetch(`${API_BASE_URL}/api/appointments/slots?${params.toString()}`)
             .then((r) => r.json())
             .then((d) => setBookedSlots(Array.isArray(d) ? d : []))
-            .catch(() => {});
+            .catch(() => {})
+            .finally(() => setSlotsLoading(false));
         }
         return;
       }
@@ -313,22 +321,36 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
 
           <div className="form-group">
             <label htmlFor="doctorId">Choose Your Doctor (optional)</label>
-            <GlassSelect
-              id="doctorId"
-              value={formData.doctorId}
-              onChange={handleChange}
-              options={[
-                { value: "", label: "No preference / any available doctor" },
-                ...doctors.map((doc) => ({
-                  value: String(doc.id),
-                  label: `${doc.name}${doc.specialty ? ` — ${doc.specialty}` : ''}`,
-                })),
-              ]}
-              placeholder="No preference / any available doctor"
-            />
+            {doctorsLoading ? (
+              <Skeleton width="100%" height="46px" radius="14px" />
+            ) : (
+              <GlassSelect
+                id="doctorId"
+                value={formData.doctorId}
+                onChange={handleChange}
+                options={[
+                  { value: "", label: "No preference / any available doctor" },
+                  ...doctors.map((doc) => ({
+                    value: String(doc.id),
+                    label: `${doc.name}${doc.specialty ? ` — ${doc.specialty}` : ''}`,
+                  })),
+                ]}
+                placeholder="No preference / any available doctor"
+              />
+            )}
           </div>
 
-          <DoctorPreviewCard doctor={selectedDoctor} autoAssigned={autoAssigned} fromProfile={fromProfile} />
+          {doctorsLoading ? (
+            <div className="doc-preview-card">
+              <Skeleton width="46px" height="46px" circle />
+              <div style={{ flex: 1 }}>
+                <Skeleton width="140px" height="0.92rem" style={{ marginBottom: 6 }} />
+                <Skeleton width="180px" height="0.78rem" />
+              </div>
+            </div>
+          ) : (
+            <DoctorPreviewCard doctor={selectedDoctor} autoAssigned={autoAssigned} fromProfile={fromProfile} />
+          )}
         </div>
       )}
 
@@ -352,17 +374,21 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
           <div className="form-group">
             <label>Preferred Time {formData.apptDate && <span style={{ fontSize: '0.78rem', color: '#888', fontWeight: 400 }}>— gray slots are already booked</span>}</label>
             <div className="time-slots">
-              {allTimeSlots.map((time, idx) => {
-                const isBooked = bookedSlots.includes(time);
-                return (
-                  <button key={idx} type="button"
-                    disabled={isBooked}
-                    className={`time-slot ${isBooked ? "unavailable" : ""} ${formData.apptTime === time ? "selected" : ""}`}
-                    onClick={() => !isBooked && setFormData({ ...formData, apptTime: time })}>
-                    {time}
-                  </button>
-                );
-              })}
+              {slotsLoading
+                ? allTimeSlots.map((_, idx) => (
+                    <Skeleton key={idx} width="100%" height="34px" radius="14px" />
+                  ))
+                : allTimeSlots.map((time, idx) => {
+                    const isBooked = bookedSlots.includes(time);
+                    return (
+                      <button key={idx} type="button"
+                        disabled={isBooked}
+                        className={`time-slot ${isBooked ? "unavailable" : ""} ${formData.apptTime === time ? "selected" : ""}`}
+                        onClick={() => !isBooked && setFormData({ ...formData, apptTime: time })}>
+                        {time}
+                      </button>
+                    );
+                  })}
             </div>
           </div>
         </div>

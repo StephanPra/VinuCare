@@ -6,7 +6,7 @@ function WriteReview({ onReviewSubmit, onNavigate, isLoggedIn, setRedirectAfterL
   const [name, setName] = useState("");
   const [pet, setPet] = useState("");
   const [service, setService] = useState("Grooming");
-  const [stars, setStars] = useState("★★★★★");
+  const [stars, setStars] = useState("⭐⭐⭐⭐⭐");
   const [reviewText, setReviewText] = useState("");
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
@@ -85,11 +85,11 @@ function WriteReview({ onReviewSubmit, onNavigate, isLoggedIn, setRedirectAfterL
             <div className="form-group">
               <label>Rating</label>
               <select value={stars} onChange={(e) => setStars(e.target.value)}>
-                <option value="★★★★★">★★★★★</option>
-                <option value="★★★★">★★★★</option>
-                <option value="★★★">★★★</option>
-                <option value="★★">★★</option>
-                <option value="★">★</option>
+                <option value="⭐⭐⭐⭐⭐">⭐⭐⭐⭐⭐</option>
+                <option value="⭐⭐⭐⭐">⭐⭐⭐⭐</option>
+                <option value="⭐⭐⭐">⭐⭐⭐</option>
+                <option value="⭐⭐">⭐⭐</option>
+                <option value="⭐">⭐</option>
               </select>
             </div>
           </div>

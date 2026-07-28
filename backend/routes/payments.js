@@ -113,9 +113,18 @@ function md5(str) {
 // seconds by the frontend.
 let cachedToken = null; // { accessToken, expiresAt }
 
+// PaymentReturn.jsx polls /api/payments/status up to 5 times, 2s apart, per
+// page visit — with bad/revoked app credentials every single poll used to
+// re-attempt the oauth request (cachedToken never gets set on failure),
+// hammering PayHere with repeated 401s and spamming this log. Remember a
+// failure for a bit so a broken credential fails fast and quiet instead.
+let tokenFetchFailedUntil = 0;
+const TOKEN_FAILURE_COOLDOWN_MS = 60_000;
+
 async function getPayHereAccessToken() {
   if (!PAYHERE_APP_ID || !PAYHERE_APP_SECRET) return null;
   if (cachedToken && cachedToken.expiresAt > Date.now()) return cachedToken.accessToken;
+  if (Date.now() < tokenFetchFailedUntil) return null;
 
   const basicAuth = Buffer.from(`${PAYHERE_APP_ID}:${PAYHERE_APP_SECRET}`).toString('base64');
   const res = await fetch(`${PAYHERE_API_BASE}/merchant/v1/oauth/token`, {
@@ -127,6 +136,7 @@ async function getPayHereAccessToken() {
     body: 'grant_type=client_credentials',
   });
   if (!res.ok) {
+    tokenFetchFailedUntil = Date.now() + TOKEN_FAILURE_COOLDOWN_MS;
     throw new Error(`PayHere oauth token request failed: ${res.status}`);
   }
   const data = await res.json();

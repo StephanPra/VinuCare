@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ExtraBanners from '../../components/ExtraBanners';
 import jsPDF from "jspdf";
 import AppointmentHero, { EmergencyStrip } from "./AppoinmentHero";
 import AppointmentFeatures from "./AppoinmentFetures";
@@ -154,6 +155,7 @@ export default function Appointment({ selectedService, selectedDoctorKeyword, is
       <div className="appt-blob-3" />
 
       <AppointmentHero />
+      <ExtraBanners page="appointments" />
       <EmergencyStrip />
 
       <div className="appt-wrap">

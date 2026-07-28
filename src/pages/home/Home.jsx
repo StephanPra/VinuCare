@@ -37,6 +37,7 @@ import {
 } from '../../components/ui/Icons';
 import LeafletMap from '../../components/LeafletMap';
 import { API_BASE_URL } from '../../config/api';
+import ExtraBanners from '../../components/ExtraBanners';
 
 // teamData.js is plain data (no JSX allowed there), so its `icon` field is
 // a short key resolved to a real icon component here.
@@ -44,9 +45,9 @@ const TEAM_ICONS = { stethoscope: StethoscopeIcon, scalpel: ScalpelIcon };
 
 // Subscription plans previewed in the hero float cards
 const subPlans = [
-  { icon: <PawIcon size={20} />, name: 'Basic Care',    detail: 'Monthly wellness check',  price: '$29/mo', color: 'var(--lavender-400)' },
-  { icon: <StethoscopeIcon size={20} />, name: 'Standard Care', detail: 'Wellness + grooming',      price: '$59/mo', color: 'var(--teal-400, #38b2ac)' },
-  { icon: <AwardIcon size={20} />, name: 'Premium Care',  detail: 'All-inclusive plan',        price: '$99/mo', color: 'var(--amber-400, #f6ad55)' },
+  { icon: <PawIcon size={20} />, name: 'Basic Care',    detail: 'Monthly wellness check',  price: 'Rs 2,900/mo', color: 'var(--lavender-400)' },
+  { icon: <StethoscopeIcon size={20} />, name: 'Standard Care', detail: 'Wellness + grooming',      price: 'Rs 5,900/mo', color: 'var(--teal-400, #38b2ac)' },
+  { icon: <AwardIcon size={20} />, name: 'Premium Care',  detail: 'All-inclusive plan',        price: 'Rs 9,900/mo', color: 'var(--amber-400, #f6ad55)' },
 ];
 
 // Current promotions — wide photo banners, Chewy-style
@@ -55,7 +56,7 @@ const offers = [
     tag: 'New Patients', bg: '#3730A3', accentBtn: '#fff', accentText: '#3730A3', icon: <PawIcon size={22} />,
     title: 'First Wellness Exam, On Us',
     desc: 'Complete health check, vaccination review and microchipping for new patients.',
-    price: '$29', was: '$75',
+    price: 'Rs 2,900', was: 'Rs 7,500',
     cta: 'Book Now',
     img: bannerNewpatient,
     alt: 'Happy dog and cat sitting together',
@@ -64,7 +65,7 @@ const offers = [
     tag: 'Bundle Deal', bg: '#0F766E', accentBtn: '#fff', accentText: '#0F766E', icon: <TagIcon size={22} />,
     title: 'Grooming + Dental, Bundled',
     desc: 'Full grooming session combined with professional dental scaling for a healthy, fresh pup.',
-    price: '$65', was: '$110',
+    price: 'Rs 6,500', was: 'Rs 11,000',
     cta: 'Book Now',
     img: bannerGrooming,
     alt: 'Dog being groomed and bathed',
@@ -73,7 +74,7 @@ const offers = [
     tag: 'Monthly Special', bg: '#B45309', accentBtn: '#fff', accentText: '#B45309', icon: <BuildingIcon size={22} />,
     title: '5 Nights of Boarding Bliss',
     desc: '5 nights of supervised boarding with daily enrichment activities and bedtime story updates.',
-    price: '$149', was: '$220',
+    price: 'Rs 14,900', was: 'Rs 22,000',
     cta: 'Reserve a Spot',
     img: bannerBoarding,
     alt: 'Dog relaxing happily at a boarding facility',
@@ -143,6 +144,36 @@ export default function Home({ onNavigate }) {
       })
       .catch(() => setReviewsLoading(false));
   }, []);
+
+  // Admin-customizable promo banners (Admin > Banners). Falls back to the
+  // hardcoded defaults above whenever a slot hasn't been customized yet.
+  const [bannerOverrides, setBannerOverrides] = useState({});
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/admin/banners`)
+      .then(res => res.json())
+      .then(data => {
+        const map = {};
+        for (const b of Array.isArray(data) ? data : []) map[b.bannerKey] = b;
+        setBannerOverrides(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  const displayOffers = offers.map((offer, i) => {
+    const ov = bannerOverrides[`home_offer_${i + 1}`];
+    if (!ov) return offer;
+    return {
+      ...offer,
+      tag: ov.tag || offer.tag,
+      title: ov.title || offer.title,
+      desc: ov.description || offer.desc,
+      price: ov.price || offer.price,
+      was: ov.originalPrice || offer.was,
+      cta: ov.ctaText || offer.cta,
+      img: ov.image || offer.img,
+      alt: ov.alt || offer.alt,
+    };
+  });
 
   return (
     <div id="page-home" className="page active">
@@ -535,7 +566,7 @@ export default function Home({ onNavigate }) {
           <p>Exclusive deals for new and returning pet families.</p>
         </div>
         <div className="photo-banner-list">
-          {offers.map((offer, i) => (
+          {displayOffers.map((offer, i) => (
             <div
               key={offer.title}
               id={`offer-${i}`}
@@ -579,6 +610,7 @@ export default function Home({ onNavigate }) {
             </div>
           ))}
         </div>
+        <ExtraBanners page="home" excludeKeys={['home_offer_1','home_offer_2','home_offer_3']} />
       </section>
 
       {/* WHY CHOOSE US — photo-banner style */}

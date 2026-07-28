@@ -145,6 +145,79 @@ router.delete('/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete product' });
   }
 });
+// GET all banners
+router.get('/banners', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, banner_key AS bannerKey, page, type, sort_order AS sortOrder,
+              tag, title, description, price, original_price AS originalPrice,
+              cta_text AS ctaText, image, alt
+       FROM banners ORDER BY page, type, sort_order, banner_key`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get banners error:', err);
+    res.status(500).json({ error: 'Failed to load banners' });
+  }
+});
+
+// CREATE a new promo-card banner (an admin-added "section") on a page.
+// Hero slots are fixed one-per-page and are never created this way.
+router.post('/banners', async (req, res) => {
+  const { page, tag, title, description, price, originalPrice, ctaText, image, alt } = req.body;
+  if (!page || !title) return res.status(400).json({ error: 'Page and title are required' });
+  try {
+    const bannerKey = `${page}_custom_${Date.now()}`;
+    const [[{ maxOrder }]] = await pool.query(
+      `SELECT COALESCE(MAX(sort_order), 0) AS maxOrder FROM banners WHERE page = ? AND type = 'offer'`,
+      [page]
+    );
+    await pool.query(
+      `INSERT INTO banners (banner_key, page, type, sort_order, tag, title, description, price, original_price, cta_text, image, alt)
+       VALUES (?, ?, 'offer', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [bannerKey, page, maxOrder + 1, tag || null, title, description || null, price || null, originalPrice || null, ctaText || null, image || null, alt || null]
+    );
+    res.status(201).json({ bannerKey, page, type: 'offer', sortOrder: maxOrder + 1, tag, title, description, price, originalPrice, ctaText, image, alt });
+  } catch (err) {
+    console.error('Create banner error:', err);
+    res.status(500).json({ error: 'Failed to create banner' });
+  }
+});
+
+// UPDATE a banner slot (slots are seeded by migration, never created/deleted via API)
+router.put('/banners/:key', async (req, res) => {
+  const { tag, title, description, price, originalPrice, ctaText, image, alt } = req.body;
+  try {
+    const [result] = await pool.query(
+      `UPDATE banners SET tag = ?, title = ?, description = ?, price = ?,
+              original_price = ?, cta_text = ?, image = ?, alt = ?
+       WHERE banner_key = ?`,
+      [tag || null, title || null, description || null, price || null,
+       originalPrice || null, ctaText || null, image || null, alt || null, req.params.key]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Unknown banner slot' });
+    res.json({ bannerKey: req.params.key, tag, title, description, price, originalPrice, ctaText, image, alt });
+  } catch (err) {
+    console.error('Update banner error:', err);
+    res.status(500).json({ error: 'Failed to update banner' });
+  }
+});
+
+// DELETE an admin-added promo-card banner. Fixed hero slots refuse deletion
+// since every page expects exactly one hero to render.
+router.delete('/banners/:key', async (req, res) => {
+  try {
+    const [[row]] = await pool.query('SELECT type FROM banners WHERE banner_key = ?', [req.params.key]);
+    if (!row) return res.status(404).json({ error: 'Unknown banner slot' });
+    if (row.type === 'hero') return res.status(400).json({ error: 'Hero banners cannot be deleted, only edited' });
+    await pool.query('DELETE FROM banners WHERE banner_key = ?', [req.params.key]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete banner error:', err);
+    res.status(500).json({ error: 'Failed to delete banner' });
+  }
+});
+
 // GET all appointments (with doctor name via join)
 router.get('/appointments', async (req, res) => {
   try {

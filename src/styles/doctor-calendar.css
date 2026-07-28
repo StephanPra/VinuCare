@@ -76,7 +76,9 @@
   height: 32px;
   border-radius: 10px;
   border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(var(--glass-rgb), 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: var(--admin-indigo);
   font-size: 18px;
   line-height: 1;
@@ -85,7 +87,7 @@
 }
 
 .vc-cal-nav-btn:hover {
-  background: var(--white);
+  background: rgba(var(--glass-rgb), 0.85);
   filter: brightness(1.02);
 }
 
@@ -94,7 +96,9 @@
   padding: 0 14px;
   border-radius: 10px;
   border: 1px solid var(--admin-indigo);
-  background: var(--white);
+  background: rgba(var(--glass-rgb), 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: var(--admin-indigo);
   font-size: 0.8rem;
   font-weight: 700;
@@ -278,7 +282,9 @@
   margin-bottom: 16px;
   border-radius: 12px;
   border: 1.5px solid #B91C1C;
-  background: transparent;
+  background: rgba(var(--glass-rgb), 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: #B91C1C;
   font-weight: 700;
   font-size: 0.85rem;

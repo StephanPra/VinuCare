@@ -370,6 +370,27 @@
   flex-shrink: 0;
 }
 
+/* Brand filter — same interaction/active-state language as
+   .sidebar-cat-btn above, just without the round category thumbnail
+   (brands are plain text, no per-brand image data exists). */
+.sidebar-brand-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.18s;
+  text-align: left;
+}
+.sidebar-brand-btn:hover { background: var(--lavender-50); }
+.sidebar-brand-btn.active { background: var(--lavender-100); }
+.sidebar-brand-btn.active .sidebar-cat-name { color: #7C5CE8; }
+.sidebar-brand-btn .sidebar-cat-count { margin-left: auto; padding-right: 8px; }
+.sidebar-brand-btn.active .sidebar-active-dot { margin-left: 0; }
+
 /* ── TOP BAR ──────────────────────────────── */
 .shop-topbar {
   display: flex;
@@ -400,6 +421,7 @@
 .shop-sort-wrap {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   font-size: 0.88rem;
   color: var(--text-light);
@@ -464,7 +486,7 @@
 
 .product-img-wrap {
   position: relative;
-  height: 220px;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: var(--lavender-50);
 }

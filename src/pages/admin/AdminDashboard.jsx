@@ -4,8 +4,9 @@ import AdminProducts from './AdminProducts';
 import AdminAppointments from './AdminAppointments';
 import AdminTransactions from './AdminTransactions';
 import AdminAnalytics from './AdminAnalytics';
+import AdminBanners from './AdminBanners';
 import { getAdminSocket } from '../../lib/adminSocket';
-import { ChartIcon, TrendIcon, UserIcon, BoxIcon, CalendarIcon, CardIcon } from '../../components/ui/Icons';
+import { ChartIcon, TrendIcon, UserIcon, BoxIcon, CalendarIcon, CardIcon, ImageIcon } from '../../components/ui/Icons';
 import '../../styles/admin.css';
 import vinuLogo from '../../assets/logo/vinucare-logo.png';
 import { API_BASE_URL } from '../../config/api';
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { id: 'analytics', label: 'Analytics', icon: <TrendIcon size={17} /> },
   { id: 'users', label: 'Users & Doctors', icon: <UserIcon size={17} /> },
   { id: 'products', label: 'Products', icon: <BoxIcon size={17} /> },
+  { id: 'banners', label: 'Banners', icon: <ImageIcon size={17} /> },
   { id: 'appointments', label: 'Appointments', icon: <CalendarIcon size={17} /> },
   { id: 'transactions', label: 'Transactions', icon: <CardIcon size={17} /> },
 ];
@@ -195,6 +197,7 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin' }) {
         {tab === 'analytics' && <AdminAnalytics />}
         {tab === 'users' && <AdminUsers />}
         {tab === 'products' && <AdminProducts />}
+        {tab === 'banners' && <AdminBanners />}
         {tab === 'appointments' && <AdminAppointments />}
         {tab === 'transactions' && <AdminTransactions />}
       </main>

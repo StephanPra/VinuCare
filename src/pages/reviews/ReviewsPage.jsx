@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ExtraBanners from '../../components/ExtraBanners';
 import ReviewHero from "./ReviewHero";
 import RatingsSummary from "./RatingsSummary";
 import WriteReview from "./WriteReview";
@@ -24,6 +25,7 @@ function ReviewsPage({ onNavigate, isLoggedIn, setRedirectAfterLogin }) {
   return (
     <div id="page-reviews" className="page active">
       <ReviewHero />
+      <ExtraBanners page="reviews" />
       <RatingsSummary reviews={allReviews} />
       <WriteReview
         onReviewSubmit={handleAddNewReview}

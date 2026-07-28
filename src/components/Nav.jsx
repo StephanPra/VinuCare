@@ -4,7 +4,8 @@ import ThemeToggle from './ThemeToggle';
 import { useTheme } from '../context/ThemeContext';
 import { notifyAuthChanged } from '../lib/authEvents';
 import vinuLogo from '../assets/logo/vinucare-logo.png';
-import { HomeIcon, PawIcon, CalendarIcon, BagIcon, CartIcon, UserIcon, SunIcon, MoonIcon, ReceiptIcon, ChartIcon, LogoutIcon, KeyIcon } from './ui/Icons';
+import { HomeIcon, PawIcon, CalendarIcon, BagIcon, CartIcon, SunIcon, MoonIcon, ReceiptIcon, ChartIcon, LogoutIcon, KeyIcon } from './ui/Icons';
+import Avatar from './ui/Avatar';
 import { API_BASE_URL } from '../config/api';
 
 const NAV_LINKS = [
@@ -124,10 +125,10 @@ export default function Nav({ activePage, onNavigate, user, setUser }) {
         }
         .nav-account-wrap { display: flex; align-items: center; gap: 8px; position: relative; }
         .nav-account-btn {
-          display: flex; align-items: center; gap: 6px;
+          display: flex; align-items: center; gap: 7px;
           background: rgba(124,92,232,0.14); border: 1px solid rgba(124,92,232,0.3);
           backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-          color: #7C5CE8; border-radius: 20px; padding: 6px 14px;
+          color: #7C5CE8; border-radius: 20px; padding: 5px 14px 5px 5px;
           font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
         }
         .nav-account-btn:hover { background: rgba(124,92,232,0.22); }
@@ -167,6 +168,7 @@ export default function Nav({ activePage, onNavigate, user, setUser }) {
           to   { opacity: 1; transform: translateY(0); }
         }
         .nav-account-dropdown-header {
+          display: flex; align-items: center; gap: 10px;
           padding: 10px 12px 8px; border-bottom: 1px solid var(--border-light); margin-bottom: 6px;
         }
         .nav-account-dropdown-name { font-weight: 700; font-size: 0.92rem; color: var(--text-dark); }
@@ -266,14 +268,18 @@ export default function Nav({ activePage, onNavigate, user, setUser }) {
                 aria-haspopup="true"
                 aria-expanded={accountMenuOpen}
               >
-                <UserIcon size={15} /> {user.name ? user.name.split(' ')[0] : 'Account'} <span style={{ fontSize: '0.7rem' }}>{accountMenuOpen ? '▲' : '▼'}</span>
+                <Avatar avatar={user.avatar} name={user.name} size={24} />
+                {user.name ? user.name.split(' ')[0] : 'Account'} <span style={{ fontSize: '0.7rem' }}>{accountMenuOpen ? '▲' : '▼'}</span>
               </button>
 
               {accountMenuOpen && (
                 <div className="nav-account-dropdown">
                   <div className="nav-account-dropdown-header">
-                    <div className="nav-account-dropdown-name">{user.name || 'Account'}</div>
-                    {user.email && <div className="nav-account-dropdown-email">{user.email}</div>}
+                    <Avatar avatar={user.avatar} name={user.name} size={40} />
+                    <div>
+                      <div className="nav-account-dropdown-name">{user.name || 'Account'}</div>
+                      {user.email && <div className="nav-account-dropdown-email">{user.email}</div>}
+                    </div>
                   </div>
 
                   <div className="nav-account-dropdown-item" style={{ cursor: 'default' }}>

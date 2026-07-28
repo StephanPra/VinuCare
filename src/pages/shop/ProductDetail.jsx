@@ -32,14 +32,12 @@ export default function ProductDetail({ product, categoryLabel, onHome, onBackTo
         <span className="crumb-current">{product.name}</span>
       </div>
 
-      <button type="button" className="detail-back-link" onClick={onBackToShop}>
-        ← Back to Shop
-      </button>
-
       <div className="product-detail-grid">
         {/* GALLERY */}
         <div className="detail-gallery">
-          <div className="detail-cat-tag">{categoryLabel}</div>
+          <button type="button" className="detail-cat-tag" onClick={onBackToShop}>
+            ← Back to Shop
+          </button>
           <div className="detail-main-img-wrap">
             <img ref={imgRef} src={product.img} alt={product.name} className="detail-main-img" />
             {product.badge && <span className="detail-badge">{product.badge}</span>}

@@ -35,7 +35,7 @@ function ReviewCard({ review }) {
         </div>
 
         <div className="rev-stars" style={{ fontSize: '1rem', marginBottom: '8px' }}>
-          {review.stars}
+          {review.stars?.replace(/★/g, '⭐')}
         </div>
 
         <p className="rev-text" style={{ fontSize: '0.93rem', lineHeight: '1.6', margin: '0 0 12px 0' }}>

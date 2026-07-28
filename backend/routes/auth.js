@@ -19,11 +19,18 @@ const AUTH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // matches the JWT's own
 // Session lives in an httpOnly cookie so the JWT is never readable from
 // frontend JS (mitigates token theft via XSS) — the browser just sends it
 // automatically on every request to this origin.
+// In production the frontend and backend live on different domains
+// (e.g. vercel.app vs railway.app), so the cookie must be sameSite:'none'
+// to be sent on cross-origin fetch calls — 'lax' silently drops it there.
+// 'none' requires secure:true, which only works over HTTPS, so dev (plain
+// http://localhost) has to stay on 'lax'/non-secure or the cookie would
+// never be set at all.
+const isProd = process.env.NODE_ENV === 'production';
 function setAuthCookie(res, token) {
   res.cookie('token', token, {
     httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    sameSite: isProd ? 'none' : 'lax',
+    secure: isProd,
     maxAge: AUTH_COOKIE_MAX_AGE_MS,
     path: '/',
   });
@@ -275,7 +282,9 @@ router.post('/reset-password', authLimiter, async (req, res) => {
 
 // ── LOGOUT ───────────────────────────────────────────────
 router.post('/logout', (req, res) => {
-  res.clearCookie('token', { path: '/' });
+  // Must match the attributes the cookie was set with (sameSite/secure) —
+  // browsers won't clear a cookie whose scoping attributes don't match.
+  res.clearCookie('token', { path: '/', sameSite: isProd ? 'none' : 'lax', secure: isProd });
   res.json({ message: 'Logged out' });
 });
 
@@ -333,7 +342,7 @@ router.post('/google', authLimiter, async (req, res) => {
 router.get('/me', auth, async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT id, name, email, role, phone, specialty, status, created_at
+      `SELECT id, name, email, role, phone, specialty, status, avatar, created_at
        FROM users WHERE id = ?`,
       [req.user.id]
     );
@@ -346,20 +355,31 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // ── UPDATE MY PROFILE ───────────────────────────────────
-// Deliberately only lets a user edit name/phone about themselves —
+// Deliberately only lets a user edit name/phone/avatar about themselves —
 // email, role, and status changes go through the admin panel instead,
 // so a customer can't quietly promote themselves to Admin by editing
 // their own profile payload.
 router.put('/me', auth, async (req, res) => {
-  const { name, phone } = req.body;
+  const { name, phone, avatar } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ message: 'Name is required' });
+  // avatar is a base64 data URL (same convention as product images in
+  // AdminProducts) — undefined means "leave it alone" (the name/phone
+  // edit form doesn't touch it), null means "remove photo".
+  const touchingAvatar = avatar !== undefined;
   try {
-    await db.query(
-      `UPDATE users SET name = ?, phone = ? WHERE id = ?`,
-      [name.trim(), phone || null, req.user.id]
-    );
+    if (touchingAvatar) {
+      await db.query(
+        `UPDATE users SET name = ?, phone = ?, avatar = ? WHERE id = ?`,
+        [name.trim(), phone || null, avatar || null, req.user.id]
+      );
+    } else {
+      await db.query(
+        `UPDATE users SET name = ?, phone = ? WHERE id = ?`,
+        [name.trim(), phone || null, req.user.id]
+      );
+    }
     const [rows] = await db.query(
-      `SELECT id, name, email, role, phone, specialty, status, created_at
+      `SELECT id, name, email, role, phone, specialty, status, avatar, created_at
        FROM users WHERE id = ?`,
       [req.user.id]
     );

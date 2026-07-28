@@ -1,4 +1,5 @@
 import ServicesHero from './ServicesHero';
+import ExtraBanners from '../../components/ExtraBanners';
 import ServiceCard from './ServiceCard';
 import ServiceDetail from './ServiceDetail';
 import servicesData from './servicesData';
@@ -32,6 +33,7 @@ function Service({ onBook, onNavigate, selectedServiceId }) {
     <div id="page-services" className="page active">
       {/* Hero Section */}
       <ServicesHero />
+      <ExtraBanners page="services" />
 
       <div className="svc-page-wrap">
         {/* Every service gets the same wide banner card, laid out 2-up */}

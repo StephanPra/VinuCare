@@ -1,7 +1,10 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useMemo } from 'react';
+import ExtraBanners from '../../components/ExtraBanners';
 import ShopHero from './ShopHero';
 import ProductCard from './ProductCard';
+import ProductCardSkeleton from './ProductCardSkeleton';
 import ProductDetail from './ProductDetail';
+import ProductDetailSkeleton from './ProductDetailSkeleton';
 import QuickViewModal from './QuickViewModal';
 import CompareBar from './CompareBar';
 import CompareModal from './CompareModal';
@@ -32,7 +35,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function Shop({ onNavigate, selectedProductId, isActive = true }) {
-  const { products, currentCategory, setCurrentCategory, currentBrand, setCurrentBrand } = useContext(ShopContext);
+  const { products, loading, currentCategory, setCurrentCategory, currentBrand, setCurrentBrand } = useContext(ShopContext);
   const [sort, setSort] = useState('default');
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [showCompareModal, setShowCompareModal] = useState(false);
@@ -57,6 +60,12 @@ export default function Shop({ onNavigate, selectedProductId, isActive = true })
 
   const countFor = (id) => id === 'all' ? products.length : products.filter(p => p.cat === id).length;
 
+  const brands = useMemo(() => {
+    const set = new Set(products.map(p => p.brand).filter(Boolean));
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [products]);
+  const brandCountFor = (brand) => brand === 'all' ? products.length : products.filter(p => p.brand === brand).length;
+
   const openDetail = (product) => {
     setQuickViewProduct(null);
     onNavigate('shop', product.id);
@@ -64,6 +73,17 @@ export default function Shop({ onNavigate, selectedProductId, isActive = true })
   };
 
   const categoryLabelFor = (catId) => CATEGORIES.find(c => c.id === catId)?.label || 'Products';
+
+  // Product deep-linked via URL but the catalog fetch hasn't resolved yet —
+  // show the detail-shaped skeleton instead of falling through to the
+  // full shop grid below, which would flash before the real detail swaps in.
+  if (loading && selectedProductId && !detailProduct) {
+    return (
+      <div id="page-shop" className="page active">
+        <ProductDetailSkeleton />
+      </div>
+    );
+  }
 
   // FULL PRODUCT DETAIL VIEW
   if (detailProduct) {
@@ -94,6 +114,7 @@ export default function Shop({ onNavigate, selectedProductId, isActive = true })
   return (
     <div id="page-shop" className="page active">
       <ShopHero />
+      <ExtraBanners page="shop" />
 
       <div className="shop-layout">
 
@@ -135,6 +156,19 @@ export default function Shop({ onNavigate, selectedProductId, isActive = true })
               )}
             </div>
             <div className="shop-sort-wrap">
+              {brands.length > 0 && (
+                <>
+                  <label>Brand:</label>
+                  <GlassSelect
+                    value={currentBrand}
+                    onChange={e => setCurrentBrand(e.target.value)}
+                    options={[
+                      { value: 'all', label: `All Brands (${brandCountFor('all')})` },
+                      ...brands.map(b => ({ value: b, label: `${b} (${brandCountFor(b)})` })),
+                    ]}
+                  />
+                </>
+              )}
               <label>Sort by:</label>
               <GlassSelect
                 value={sort}
@@ -145,7 +179,13 @@ export default function Shop({ onNavigate, selectedProductId, isActive = true })
           </div>
 
           {/* PRODUCT GRID */}
-          {sorted.length === 0 ? (
+          {loading && products.length === 0 ? (
+            <div className="products-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : sorted.length === 0 ? (
             <div className="shop-empty">
               <div style={{ opacity: 0.5 }}><SearchIcon size={40} /></div>
               <p>No products in this category yet.</p>
