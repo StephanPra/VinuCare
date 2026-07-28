@@ -3,7 +3,7 @@ import ExtraBanners from '../../components/ExtraBanners';
 import ServiceCard from './ServiceCard';
 import ServiceDetail from './ServiceDetail';
 import servicesData from './servicesData';
-import { categoryColors } from './serviceMeta';
+import { categoryColors } from './ServiceMeta';
 import Reveal from '../../components/Reveal';
 import '../../styles/services.css';
 

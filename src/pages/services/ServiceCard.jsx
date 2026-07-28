@@ -1,4 +1,4 @@
-import { CategoryIcon } from './serviceMeta';
+import { CategoryIcon } from './ServiceMeta';
 
 function ServiceCard({
   category,

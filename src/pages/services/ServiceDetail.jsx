@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CategoryIcon } from './serviceMeta';
+import { CategoryIcon } from './ServiceMeta';
 import DetailGallery from '../../components/ui/DetailGallery';
 
 function CalendarIcon() {
