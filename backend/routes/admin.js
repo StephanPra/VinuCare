@@ -162,10 +162,10 @@ router.put('/products/:id', auth, requireRole('Admin', 'Nurse'), async (req, res
   }
 });
 
-// Stock-only adjustment — used by the Nurse stock-intake view and the
-// Admin restock quick-action. Deliberately can't touch name/price/
-// description, so a Nurse account is restricted at the API level too,
-// not just hidden in the UI.
+// Stock-only adjustment — used by the restock quick-action in the
+// product edit modal (Admin and Nurse both have full product access now,
+// but this stays as the single place stock changes get applied so it
+// doesn't require re-sending the whole product payload).
 router.patch('/products/:id/stock', auth, requireRole('Admin', 'Nurse'), async (req, res) => {
   const delta = Number(req.body.delta);
   if (!Number.isFinite(delta) || delta === 0) {

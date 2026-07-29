@@ -281,7 +281,7 @@ export default function AdminProducts({ initialLowStockOnly = false }) {
                   <label>Stock quantity</label>
                   <input type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} />
                   {editingId && (
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8, width: '100%' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, width: '100%' }}>
                       <input
                         type="number"
                         placeholder="+ Qty"
