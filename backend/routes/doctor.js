@@ -2,6 +2,8 @@ const express = require('express');
 const db = require('../db');
 const auth = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/requireRole');
+const { emitToAdmin } = require('../socket');
+const { sendAppointmentCancelledEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
@@ -69,6 +71,9 @@ router.get('/unavailability', auth, requireRole('Doctor'), async (req, res) => {
 });
 
 // POST /api/doctor/unavailability { date: 'YYYY-MM-DD' }
+// Blocking off a day that already has Pending/Confirmed bookings on it
+// cancels those bookings and emails each affected owner a link to pick a
+// new day — they shouldn't just silently vanish off the doctor's calendar.
 router.post('/unavailability', auth, requireRole('Doctor'), async (req, res) => {
   const { date } = req.body;
   if (!date) return res.status(400).json({ message: 'Date is required' });
@@ -77,7 +82,30 @@ router.post('/unavailability', auth, requireRole('Doctor'), async (req, res) => 
       `INSERT IGNORE INTO doctor_unavailability (doctor_id, date) VALUES (?, ?)`,
       [req.user.id, date]
     );
-    res.status(201).json({ date });
+
+    const [affected] = await db.query(
+      `SELECT a.id, a.pet_name AS petName, a.service, a.appt_time AS time,
+              u.email, u.name AS ownerName
+       FROM appointments a
+       LEFT JOIN users u ON a.user_id = u.id
+       WHERE a.doctor_id = ? AND a.appt_date = ? AND a.status IN ('Pending', 'Confirmed')`,
+      [req.user.id, date]
+    );
+
+    for (const appt of affected) {
+      await db.query(`UPDATE appointments SET status = 'Cancelled' WHERE id = ?`, [appt.id]);
+      emitToAdmin('appointment:statusChanged', { id: appt.id, status: 'Cancelled' });
+      if (appt.email) {
+        sendAppointmentCancelledEmail(
+          appt.email,
+          appt.ownerName || 'there',
+          { date, petName: appt.petName, service: appt.service, time: appt.time },
+          `${process.env.FRONTEND_URL || 'http://localhost:5173'}/appointments`
+        ).catch((err) => console.error('Failed to send reschedule email:', err));
+      }
+    }
+
+    res.status(201).json({ date, cancelledCount: affected.length });
   } catch (err) {
     console.error('Add doctor unavailability error:', err);
     res.status(500).json({ message: 'Failed to mark date unavailable' });

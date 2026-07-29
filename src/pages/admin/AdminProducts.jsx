@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
+import { ShopContext } from '../shop/ShopContext';
 
 const API_BASE = `${API_BASE_URL}/api/admin/products`;
 
@@ -16,16 +17,19 @@ const CATEGORY_OPTIONS = [
 
 const EMPTY_FORM = { name: '', cat: 'dogs', brand: '', price: '', stock: '', image: '', description: '' };
 
-export default function AdminProducts() {
+export default function AdminProducts({ initialLowStockOnly = false }) {
   const { confirm, success, error: notifyError } = useUIFeedback();
+  const { refreshProducts } = useContext(ShopContext);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState('all');
+  const [lowStockOnly, setLowStockOnly] = useState(initialLowStockOnly);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [restockAmount, setRestockAmount] = useState('');
 
   useEffect(() => {
     loadProducts();
@@ -35,7 +39,7 @@ export default function AdminProducts() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API_BASE);
+      const res = await fetch(API_BASE, { credentials: 'include' });
       if (!res.ok) throw new Error('Server responded ' + res.status);
       const data = await res.json();
       setProducts(data);
@@ -50,12 +54,25 @@ export default function AdminProducts() {
   const filtered = products.filter(p => {
     const matchesQuery = p.name.toLowerCase().includes(query.toLowerCase());
     const matchesCat = catFilter === 'all' || p.cat === catFilter;
-    return matchesQuery && matchesCat;
+    const matchesStock = !lowStockOnly || p.stock <= 10;
+    return matchesQuery && matchesCat && matchesStock;
   });
+
+  // Adds the entered quantity straight into the form's stock field — it's
+  // just part of the edit until Save is clicked, same as any other field,
+  // rather than a separate immediate write (keeps one save action per
+  // product edit instead of two different ways to change stock).
+  function applyRestock() {
+    const delta = Number(restockAmount);
+    if (!delta) return;
+    setForm(f => ({ ...f, stock: Number(f.stock || 0) + delta }));
+    setRestockAmount('');
+  }
 
   function openAdd() {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setRestockAmount('');
     setModalOpen(true);
   }
 
@@ -70,6 +87,7 @@ export default function AdminProducts() {
       image: product.image || '',
       description: product.description || '',
     });
+    setRestockAmount('');
     setModalOpen(true);
   }
 
@@ -82,9 +100,10 @@ export default function AdminProducts() {
     });
     if (!ok) return;
     try {
-      const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE', credentials: 'include' });
       if (!res.ok) throw new Error('Server responded ' + res.status);
       setProducts(prev => prev.filter(p => p.id !== id));
+      refreshProducts();
       success('Product deleted.');
     } catch (err) {
       console.error('Failed to delete product:', err);
@@ -112,6 +131,7 @@ export default function AdminProducts() {
       if (editingId) {
         const res = await fetch(`${API_BASE}/${editingId}`, {
           method: 'PUT',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
@@ -120,6 +140,7 @@ export default function AdminProducts() {
       } else {
         const res = await fetch(API_BASE, {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
@@ -127,6 +148,7 @@ export default function AdminProducts() {
         const created = await res.json();
         setProducts(prev => [created, ...prev]);
       }
+      refreshProducts();
       setModalOpen(false);
       success(editingId ? 'Product updated.' : 'Product added.');
     } catch (err) {
@@ -171,6 +193,13 @@ export default function AdminProducts() {
                 {c.label}
               </button>
             ))}
+            <button
+              type="button"
+              className={`admin-tab-btn${lowStockOnly ? ' active' : ''}`}
+              onClick={() => setLowStockOnly(v => !v)}
+            >
+              Low stock only
+            </button>
           </div>
         </div>
 
@@ -251,6 +280,18 @@ export default function AdminProducts() {
                 <div className="admin-field">
                   <label>Stock quantity</label>
                   <input type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} />
+                  {editingId && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8, width: '100%' }}>
+                      <input
+                        type="number"
+                        placeholder="+ Qty"
+                        value={restockAmount}
+                        onChange={e => setRestockAmount(e.target.value)}
+                        style={{ flex: 1, minWidth: 0 }}
+                      />
+                      <button type="button" className="admin-btn admin-btn-outline admin-btn-sm" style={{ flexShrink: 0 }} onClick={applyRestock}>Restock</button>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="admin-field">

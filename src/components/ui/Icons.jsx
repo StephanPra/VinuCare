@@ -551,3 +551,12 @@ export function SendIcon(props) {
     </Base>
   );
 }
+
+export function SettingsIcon(props) {
+  return (
+    <Base {...props}>
+      <circle cx="11" cy="11" r="2.6" />
+      <path d="M11 3.2v2.1M11 15.7v2.1M18.8 11h-2.1M5.3 11H3.2M16.4 5.6l-1.5 1.5M7.1 14.9l-1.5 1.5M16.4 16.4l-1.5-1.5M7.1 7.1 5.6 5.6" />
+    </Base>
+  );
+}

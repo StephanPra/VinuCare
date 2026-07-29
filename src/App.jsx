@@ -178,19 +178,19 @@ function PageSwitch({ page, isActive, onNavigate, selectedService, setSelectedSe
       if (!user?.isAdmin) {
         return null;
       }
-      return <AdminDashboard onNavigate={onNavigate} adminName={user?.name} />;
+      return <AdminDashboard onNavigate={onNavigate} adminName={user?.name} user={user} setUser={setUser} />;
     case 'nurse':
       // Same reasoning as 'admin' above: the redirect for an unauthorized
       // visitor happens in a useEffect in App, not here.
       if (!user?.isNurse) {
         return null;
       }
-      return <NurseDashboard onNavigate={onNavigate} nurseName={user?.name} />;
+      return <NurseDashboard onNavigate={onNavigate} user={user} setUser={setUser} />;
     case 'doctor':
       if (!user?.isDoctor) {
         return null;
       }
-      return <DoctorDashboard onNavigate={onNavigate} doctorName={user?.name} />;
+      return <DoctorDashboard onNavigate={onNavigate} user={user} setUser={setUser} />;
     default:
       return <Home onNavigate={onNavigate} />;
   }

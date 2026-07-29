@@ -836,6 +836,15 @@
   text-decoration: line-through;
   text-decoration-color: #B91C1C;
 }
+/* Public holidays are grayed out the same way, but with the site's own
+   accent color rather than the "doctor unavailable" red, so the two
+   reasons a date is blocked read as visually distinct. */
+.booking-cal-cell.holiday {
+  opacity: 0.45;
+  text-decoration: line-through;
+  text-decoration-color: var(--lavender-500);
+  background: rgba(124, 92, 232, 0.06);
+}
 
 /* ── Review step ── */
 .appt-review-list {

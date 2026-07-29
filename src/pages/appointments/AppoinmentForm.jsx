@@ -18,6 +18,7 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
 
   const [bookedSlots, setBookedSlots] = useState([]);
   const [unavailableDates, setUnavailableDates] = useState([]);
+  const [holidays, setHolidays] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [doctorsLoading, setDoctorsLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -30,6 +31,15 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
       .then(data => setDoctors(Array.isArray(data) ? data : []))
       .catch(() => setDoctors([]))
       .finally(() => setDoctorsLoading(false));
+  }, []);
+
+  // Clinic-wide holidays gray out on the calendar no matter which doctor
+  // is selected, so this only needs to load once.
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/appointments/holidays`)
+      .then(res => res.json())
+      .then(data => setHolidays(Array.isArray(data) ? data : []))
+      .catch(() => setHolidays([]));
   }, []);
 
   useEffect(() => {
@@ -132,6 +142,10 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
     "1:00 PM", "2:00 PM",  "3:00 PM",  "4:00 PM",
     "5:00 PM", "6:00 PM"
   ];
+  // The vet is only in until 2 PM on Saturdays — slots after that are
+  // grayed out below. Index-based since allTimeSlots is a fixed, ordered list.
+  const saturdayCutoffIndex = allTimeSlots.indexOf("2:00 PM");
+  const isSaturday = !!formData.apptDate && new Date(formData.apptDate + "T00:00:00").getDay() === 6;
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -363,6 +377,7 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
               value={formData.apptDate}
               onChange={(dateStr) => setFormData({ ...formData, apptDate: dateStr, apptTime: "" })}
               disabledDates={unavailableDates}
+              holidays={holidays}
             />
             {formData.doctorId && unavailableDates.length > 0 && (
               <p style={{ fontSize: '0.78rem', color: '#888', marginTop: '6px' }}>
@@ -380,16 +395,24 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
                   ))
                 : allTimeSlots.map((time, idx) => {
                     const isBooked = bookedSlots.includes(time);
+                    const isPastSaturdayCutoff = isSaturday && idx > saturdayCutoffIndex;
+                    const isDisabled = isBooked || isPastSaturdayCutoff;
                     return (
                       <button key={idx} type="button"
-                        disabled={isBooked}
-                        className={`time-slot ${isBooked ? "unavailable" : ""} ${formData.apptTime === time ? "selected" : ""}`}
-                        onClick={() => !isBooked && setFormData({ ...formData, apptTime: time })}>
+                        disabled={isDisabled}
+                        title={isPastSaturdayCutoff ? "Vet only available until 2 PM on Saturdays" : undefined}
+                        className={`time-slot ${isDisabled ? "unavailable" : ""} ${formData.apptTime === time ? "selected" : ""}`}
+                        onClick={() => !isDisabled && setFormData({ ...formData, apptTime: time })}>
                         {time}
                       </button>
                     );
                   })}
             </div>
+            {isSaturday && (
+              <p style={{ fontSize: '0.78rem', color: '#888', marginTop: '6px' }}>
+                The vet is only available until 2 PM on Saturdays.
+              </p>
+            )}
           </div>
         </div>
       )}

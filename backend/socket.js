@@ -2,11 +2,34 @@
 // event without needing to know about the underlying HTTP server.
 //
 // Usage:
-//   const { initSocket, emitToAdmin } = require('../socket');
+//   const { initSocket, emitToAdmin, emitToUser } = require('../socket');
 //   initSocket(httpServer);           // once, in server.js
 //   emitToAdmin('appointment:new', {...});   // from any route
+//   emitToUser(userId, 'message:new', {...});
+
+const jwt = require('jsonwebtoken');
+const bootId = require('./bootId');
 
 let io = null;
+
+// The auth cookie is httpOnly (frontend JS can't read it to send as a
+// socket payload), but the browser still sends it automatically on the
+// socket.io handshake request — same as any other credentialed request —
+// so identity is read straight off that, not trusted from the client.
+function getUserFromHandshake(socket) {
+  const cookieHeader = socket.handshake.headers.cookie;
+  if (!cookieHeader) return null;
+  const match = cookieHeader.split(';').map((s) => s.trim()).find((s) => s.startsWith('token='));
+  if (!match) return null;
+  try {
+    const token = decodeURIComponent(match.slice('token='.length));
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.bootId !== bootId) return null;
+    return decoded;
+  } catch {
+    return null;
+  }
+}
 
 function initSocket(httpServer) {
   const { Server } = require('socket.io');
@@ -19,10 +42,20 @@ function initSocket(httpServer) {
   });
 
   io.on('connection', (socket) => {
+    const user = getUserFromHandshake(socket);
+
     // The admin dashboard joins this room on mount so it only receives
-    // events relevant to it (not every connected browser tab).
+    // events relevant to it (not every connected browser tab). Verified
+    // against the real session now instead of trusting any caller.
     socket.on('join:admin', () => {
-      socket.join('admin');
+      if (user?.role === 'Admin') socket.join('admin');
+    });
+
+    // A Doctor/Nurse's own dashboard joins their personal room so a
+    // reply from Admin reaches them live, without exposing anyone
+    // else's room name or requiring the client to assert an id.
+    socket.on('join:user', () => {
+      if (user?.id) socket.join(`user:${user.id}`);
     });
 
     socket.on('disconnect', () => {
@@ -44,4 +77,12 @@ function emitToAdmin(event, payload) {
   io.to('admin').emit(event, payload);
 }
 
-module.exports = { initSocket, emitToAdmin };
+// Emits an event to one specific logged-in user's own room (see
+// join:user above) — used to push a new DM reply straight to the
+// recipient's dashboard.
+function emitToUser(userId, event, payload) {
+  if (!io) return;
+  io.to(`user:${userId}`).emit(event, payload);
+}
+
+module.exports = { initSocket, emitToAdmin, emitToUser };

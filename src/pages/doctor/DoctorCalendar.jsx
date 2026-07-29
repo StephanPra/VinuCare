@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useUIFeedback } from '../../context/UIFeedbackContext';
 import '../../styles/doctor-calendar.css';
 import { API_BASE_URL } from '../../config/api';
 
@@ -38,18 +39,33 @@ function toDateKey(year, month, day) {
 }
 
 const UNAVAILABILITY_URL = `${API_BASE_URL}/api/doctor/unavailability`;
+const HOLIDAYS_URL = `${API_BASE_URL}/api/appointments/holidays`;
 
 export default function DoctorCalendar() {
+  const { confirm, success, error: notifyError } = useUIFeedback();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [unavailableDates, setUnavailableDates] = useState([]);
+  const [holidays, setHolidays] = useState([]);
   const [savingAvailability, setSavingAvailability] = useState(false);
 
   useEffect(() => {
     loadAppointments();
     loadUnavailability();
+    loadHolidays();
   }, []);
+
+  async function loadHolidays() {
+    try {
+      const res = await fetch(HOLIDAYS_URL);
+      if (!res.ok) return;
+      const json = await res.json();
+      setHolidays(Array.isArray(json) ? json : []);
+    } catch (err) {
+      console.error('Failed to load holidays:', err);
+    }
+  }
 
   async function loadAppointments() {
     setLoading(true);
@@ -80,22 +96,42 @@ export default function DoctorCalendar() {
 
   async function toggleUnavailable(dateKey) {
     const isCurrentlyUnavailable = unavailableDates.includes(dateKey);
+
+    if (!isCurrentlyUnavailable) {
+      const bookedCount = (apptsByDate[dateKey] || []).filter((a) => a.status === 'booked').length;
+      if (bookedCount > 0) {
+        const ok = await confirm({
+          title: 'Cancel existing bookings?',
+          message: `${bookedCount} appointment${bookedCount === 1 ? '' : 's'} on this day will be cancelled and the owner${bookedCount === 1 ? '' : 's'} emailed to pick a new day. Continue?`,
+          confirmLabel: 'Mark Unavailable',
+          danger: true,
+        });
+        if (!ok) return;
+      }
+    }
+
     setSavingAvailability(true);
     try {
       if (isCurrentlyUnavailable) {
         await fetch(`${UNAVAILABILITY_URL}/${dateKey}`, { method: 'DELETE', credentials: 'include' });
         setUnavailableDates((prev) => prev.filter((d) => d !== dateKey));
       } else {
-        await fetch(UNAVAILABILITY_URL, {
+        const res = await fetch(UNAVAILABILITY_URL, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ date: dateKey }),
         });
+        const body = await res.json();
         setUnavailableDates((prev) => [...prev, dateKey]);
+        if (body.cancelledCount > 0) {
+          await loadAppointments();
+          success(`Marked unavailable. ${body.cancelledCount} appointment${body.cancelledCount === 1 ? '' : 's'} cancelled and the owner${body.cancelledCount === 1 ? '' : 's'} notified by email.`);
+        }
       }
     } catch (err) {
       console.error('Failed to update availability:', err);
+      notifyError('Failed to update availability: ' + err.message);
     } finally {
       setSavingAvailability(false);
     }
@@ -109,6 +145,8 @@ export default function DoctorCalendar() {
     const now = new Date();
     return toDateKey(now.getFullYear(), now.getMonth(), now.getDate());
   });
+
+  const holidayByDate = useMemo(() => new Map(holidays.map((h) => [h.date, h.name])), [holidays]);
 
   const apptsByDate = useMemo(() => {
     const map = {};
@@ -252,18 +290,21 @@ export default function DoctorCalendar() {
                 const isToday = cell.key === todayKey;
                 const isSelected = cell.key === selectedDate;
                 const isUnavailable = unavailableDates.includes(cell.key);
+                const isHoliday = holidayByDate.has(cell.key);
                 const visible = dayAppts.slice(0, 2);
                 const overflow = dayAppts.length - visible.length;
 
                 return (
                   <button
                     key={cell.key}
+                    title={isHoliday ? `Public holiday: ${holidayByDate.get(cell.key)}` : undefined}
                     className={[
                       'vc-cal-day',
                       !cell.inMonth ? 'vc-cal-day--muted' : '',
                       isToday ? 'vc-cal-day--today' : '',
                       isSelected ? 'vc-cal-day--selected' : '',
                       isUnavailable ? 'vc-cal-day--unavailable' : '',
+                      isHoliday ? 'vc-cal-day--holiday' : '',
                     ].join(' ').trim()}
                     onClick={() => setSelectedDate(cell.key)}
                   >
@@ -297,7 +338,11 @@ export default function DoctorCalendar() {
           </span>
         </div>
 
-        {selectedDate && selectedDate >= todayKey && (
+        {selectedDate && holidayByDate.has(selectedDate) ? (
+          <p className="vc-cal-empty" style={{ marginBottom: 16 }}>
+            Public holiday — {holidayByDate.get(selectedDate)}. The clinic is closed, nothing to mark here.
+          </p>
+        ) : selectedDate && selectedDate >= todayKey && (
           <button
             type="button"
             className={`vc-cal-availability-btn ${unavailableDates.includes(selectedDate) ? 'is-unavailable' : ''}`}

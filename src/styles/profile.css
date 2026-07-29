@@ -34,7 +34,11 @@
   padding-bottom: 22px; margin-bottom: 22px;
   border-bottom: 1px solid var(--border-light);
 }
-.profile-avatar-wrap { position: relative; flex-shrink: 0; }
+/* inline-block so this shrinks to the avatar's own size rather than
+   stretching to its parent's full width — matters wherever it's used
+   outside a flex row (e.g. the admin Settings panel), since the
+   edit-photo button below anchors to *this* wrapper's right edge. */
+.profile-avatar-wrap { position: relative; flex-shrink: 0; display: inline-block; }
 .profile-avatar-edit-btn {
   position: absolute; bottom: -2px; right: -2px;
   width: 24px; height: 24px; border-radius: 50%;

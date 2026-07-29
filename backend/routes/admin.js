@@ -2,10 +2,26 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const pool = require('../db.js');
 const { emitToAdmin } = require('../socket');
+const auth = require('../middleware/authMiddleware');
+const requireRole = require('../middleware/requireRole');
 
 const router = express.Router();
 
-router.get('/summary', async (req, res) => {
+// Records an admin/nurse/doctor action for the audit log. Fire-and-forget —
+// a logging failure shouldn't fail the actual request.
+async function logAction(req, action, entityType, entityId, details = null) {
+  try {
+    await pool.query(
+      `INSERT INTO audit_log (actor_id, actor_name, actor_role, action, entity_type, entity_id, details)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, req.user.name, req.user.role, action, entityType, String(entityId), details]
+    );
+  } catch (err) {
+    console.error('Audit log write failed:', err);
+  }
+}
+
+router.get('/summary', auth, requireRole('Admin'), async (req, res) => {
   try {
     const [[{ totalRevenue }]] = await pool.query(
       `SELECT COALESCE(SUM(amount), 0) AS totalRevenue
@@ -22,15 +38,18 @@ router.get('/summary', async (req, res) => {
     const [[{ lowStockProducts }]] = await pool.query(
   `SELECT COUNT(*) AS lowStockProducts FROM products WHERE stock <= 10`
     );
+    const [[{ unreadMessages }]] = await pool.query(
+      `SELECT COUNT(*) AS unreadMessages FROM messages WHERE sender_role != 'Admin' AND read_by_admin_at IS NULL`
+    );
 
-    res.json({ totalRevenue, pendingAppointments, activeDoctors, lowStockProducts });
+    res.json({ totalRevenue, pendingAppointments, activeDoctors, lowStockProducts, unreadMessages });
   } catch (err) {
     console.error('Admin summary error:', err);
     res.status(500).json({ error: 'Failed to load summary' });
   }
 });
 // GET all users
-router.get('/users', async (req, res) => {
+router.get('/users', auth, requireRole('Admin'), async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT id, name, email, role, phone, specialty, status, is_verified, created_at AS joined
@@ -44,7 +63,7 @@ router.get('/users', async (req, res) => {
 });
 
 // CREATE user
-router.post('/users', async (req, res) => {
+router.post('/users', auth, requireRole('Admin'), async (req, res) => {
   const { name, email, role, phone, specialty, status, password } = req.body;
   if (!name || !email) return res.status(400).json({ error: 'Name and email are required' });
   if (!password) return res.status(400).json({ error: 'A temporary password is required so this user can log in' });
@@ -55,6 +74,7 @@ router.post('/users', async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [name, email, role || 'Customer', phone || null, specialty || null, status || 'Active', hashed]
     );
+    await logAction(req, 'create', 'user', result.insertId, `Created ${role || 'Customer'} "${name}" (${email})`);
     res.status(201).json({ id: result.insertId, name, email, role, phone, specialty, status });
   } catch (err) {
     console.error('Create user error:', err);
@@ -63,7 +83,7 @@ router.post('/users', async (req, res) => {
 });
 
 // UPDATE user
-router.put('/users/:id', async (req, res) => {
+router.put('/users/:id', auth, requireRole('Admin'), async (req, res) => {
   const { name, email, role, phone, specialty, status } = req.body;
   try {
     await pool.query(
@@ -71,6 +91,7 @@ router.put('/users/:id', async (req, res) => {
        WHERE id = ?`,
       [name, email, role, phone, specialty, status, req.params.id]
     );
+    await logAction(req, 'update', 'user', req.params.id, `Updated "${name}" (${email})`);
     res.json({ id: req.params.id, name, email, role, phone, specialty, status });
   } catch (err) {
     console.error('Update user error:', err);
@@ -79,16 +100,20 @@ router.put('/users/:id', async (req, res) => {
 });
 
 // DELETE user
-router.delete('/users/:id', async (req, res) => {
+router.delete('/users/:id', auth, requireRole('Admin'), async (req, res) => {
   try {
     await pool.query(`DELETE FROM users WHERE id = ?`, [req.params.id]);
+    await logAction(req, 'delete', 'user', req.params.id);
     res.json({ success: true });
   } catch (err) {
     console.error('Delete user error:', err);
     res.status(500).json({ error: 'Failed to delete user' });
   }
 });
-// GET all products
+// GET all products — this is also the public shop catalog fetch
+// (ShopContext.jsx / Shop.jsx call this same route for every visitor,
+// logged in or not), so it stays unauthenticated. Only the mutating
+// routes below (create/edit/delete/stock) are role-restricted.
 router.get('/products', async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -103,7 +128,7 @@ router.get('/products', async (req, res) => {
 });
 
 // CREATE product
-router.post('/products', async (req, res) => {
+router.post('/products', auth, requireRole('Admin', 'Nurse'), async (req, res) => {
   const { name, cat, brand, price, stock, image, description } = req.body;
   if (!name || !price) return res.status(400).json({ error: 'Name and price are required' });
   try {
@@ -112,6 +137,7 @@ router.post('/products', async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [name, cat, brand || null, price, stock || 0, image || null, description || null]
     );
+    await logAction(req, 'create', 'product', result.insertId, `Created "${name}"`);
     res.status(201).json({ id: result.insertId, name, cat, brand, price, stock, image, description });
   } catch (err) {
     console.error('Create product error:', err);
@@ -119,8 +145,8 @@ router.post('/products', async (req, res) => {
   }
 });
 
-// UPDATE product
-router.put('/products/:id', async (req, res) => {
+// UPDATE product (full edit — name/price/description/etc.)
+router.put('/products/:id', auth, requireRole('Admin', 'Nurse'), async (req, res) => {
   const { name, cat, brand, price, stock, image, description } = req.body;
   try {
     await pool.query(
@@ -128,6 +154,7 @@ router.put('/products/:id', async (req, res) => {
        WHERE id = ?`,
       [name, cat, brand || null, price, stock, image, description, req.params.id]
     );
+    await logAction(req, 'update', 'product', req.params.id, `Updated "${name}"`);
     res.json({ id: req.params.id, name, cat, brand, price, stock, image, description });
   } catch (err) {
     console.error('Update product error:', err);
@@ -135,17 +162,44 @@ router.put('/products/:id', async (req, res) => {
   }
 });
 
+// Stock-only adjustment — used by the Nurse stock-intake view and the
+// Admin restock quick-action. Deliberately can't touch name/price/
+// description, so a Nurse account is restricted at the API level too,
+// not just hidden in the UI.
+router.patch('/products/:id/stock', auth, requireRole('Admin', 'Nurse'), async (req, res) => {
+  const delta = Number(req.body.delta);
+  if (!Number.isFinite(delta) || delta === 0) {
+    return res.status(400).json({ error: 'A non-zero delta is required' });
+  }
+  try {
+    const [result] = await pool.query(
+      `UPDATE products SET stock = GREATEST(stock + ?, 0) WHERE id = ?`,
+      [delta, req.params.id]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Product not found' });
+    const [[row]] = await pool.query(`SELECT id, stock FROM products WHERE id = ?`, [req.params.id]);
+    await logAction(req, 'restock', 'product', req.params.id, `${delta > 0 ? '+' : ''}${delta} units`);
+    res.json(row);
+  } catch (err) {
+    console.error('Restock product error:', err);
+    res.status(500).json({ error: 'Failed to update stock' });
+  }
+});
+
 // DELETE product
-router.delete('/products/:id', async (req, res) => {
+router.delete('/products/:id', auth, requireRole('Admin', 'Nurse'), async (req, res) => {
   try {
     await pool.query(`DELETE FROM products WHERE id = ?`, [req.params.id]);
+    await logAction(req, 'delete', 'product', req.params.id);
     res.json({ success: true });
   } catch (err) {
     console.error('Delete product error:', err);
     res.status(500).json({ error: 'Failed to delete product' });
   }
 });
-// GET all banners
+// GET all banners — this is also the public banner fetch used by
+// ExtraBanners.jsx on Home/Shop/Services/etc. for every visitor, so it
+// stays unauthenticated. Only the mutating routes below are Admin-only.
 router.get('/banners', async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -163,7 +217,7 @@ router.get('/banners', async (req, res) => {
 
 // CREATE a new promo-card banner (an admin-added "section") on a page.
 // Hero slots are fixed one-per-page and are never created this way.
-router.post('/banners', async (req, res) => {
+router.post('/banners', auth, requireRole('Admin'), async (req, res) => {
   const { page, tag, title, description, price, originalPrice, ctaText, image, alt } = req.body;
   if (!page || !title) return res.status(400).json({ error: 'Page and title are required' });
   try {
@@ -177,6 +231,7 @@ router.post('/banners', async (req, res) => {
        VALUES (?, ?, 'offer', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [bannerKey, page, maxOrder + 1, tag || null, title, description || null, price || null, originalPrice || null, ctaText || null, image || null, alt || null]
     );
+    await logAction(req, 'create', 'banner', bannerKey, `Added "${title}" to ${page}`);
     res.status(201).json({ bannerKey, page, type: 'offer', sortOrder: maxOrder + 1, tag, title, description, price, originalPrice, ctaText, image, alt });
   } catch (err) {
     console.error('Create banner error:', err);
@@ -185,7 +240,7 @@ router.post('/banners', async (req, res) => {
 });
 
 // UPDATE a banner slot (slots are seeded by migration, never created/deleted via API)
-router.put('/banners/:key', async (req, res) => {
+router.put('/banners/:key', auth, requireRole('Admin'), async (req, res) => {
   const { tag, title, description, price, originalPrice, ctaText, image, alt } = req.body;
   try {
     const [result] = await pool.query(
@@ -196,6 +251,7 @@ router.put('/banners/:key', async (req, res) => {
        originalPrice || null, ctaText || null, image || null, alt || null, req.params.key]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Unknown banner slot' });
+    await logAction(req, 'update', 'banner', req.params.key, `Updated "${title}"`);
     res.json({ bannerKey: req.params.key, tag, title, description, price, originalPrice, ctaText, image, alt });
   } catch (err) {
     console.error('Update banner error:', err);
@@ -205,12 +261,13 @@ router.put('/banners/:key', async (req, res) => {
 
 // DELETE an admin-added promo-card banner. Fixed hero slots refuse deletion
 // since every page expects exactly one hero to render.
-router.delete('/banners/:key', async (req, res) => {
+router.delete('/banners/:key', auth, requireRole('Admin'), async (req, res) => {
   try {
     const [[row]] = await pool.query('SELECT type FROM banners WHERE banner_key = ?', [req.params.key]);
     if (!row) return res.status(404).json({ error: 'Unknown banner slot' });
     if (row.type === 'hero') return res.status(400).json({ error: 'Hero banners cannot be deleted, only edited' });
     await pool.query('DELETE FROM banners WHERE banner_key = ?', [req.params.key]);
+    await logAction(req, 'delete', 'banner', req.params.key);
     res.json({ success: true });
   } catch (err) {
     console.error('Delete banner error:', err);
@@ -218,16 +275,32 @@ router.delete('/banners/:key', async (req, res) => {
   }
 });
 
-// GET all appointments (with doctor name via join)
-router.get('/appointments', async (req, res) => {
+// GET all appointments (with doctor name via join). A Doctor only ever
+// gets their own appointments — enforced server-side regardless of what
+// the client asks for. Admin may narrow the list to one doctor via
+// ?doctorId= (used by the scheduling overview); Nurse sees everything,
+// same as before.
+router.get('/appointments', auth, requireRole('Admin', 'Doctor', 'Nurse'), async (req, res) => {
   try {
+    const params = [];
+    let where = '';
+    if (req.user.role === 'Doctor') {
+      where = 'WHERE a.doctor_id = ?';
+      params.push(req.user.id);
+    } else if (req.user.role === 'Admin' && req.query.doctorId) {
+      where = 'WHERE a.doctor_id = ?';
+      params.push(req.query.doctorId);
+    }
     const [rows] = await pool.query(
       `SELECT a.id, a.pet_name AS petName, a.owner_name AS ownerName, a.service,
               DATE_FORMAT(a.appt_date, '%Y-%m-%d') AS date, a.appt_time AS time,
-              a.status, u.name AS doctor
+              a.status, u.name AS doctor, a.doctor_notes AS doctorNotes,
+              a.prescription, a.checked_in_at AS checkedInAt
        FROM appointments a
        LEFT JOIN users u ON a.doctor_id = u.id
-       ORDER BY a.appt_date, a.appt_time`
+       ${where}
+       ORDER BY a.appt_date, a.appt_time`,
+      params
     );
     res.json(rows);
   } catch (err) {
@@ -236,11 +309,21 @@ router.get('/appointments', async (req, res) => {
   }
 });
 
-// UPDATE status only
-router.patch('/appointments/:id', async (req, res) => {
+// UPDATE status only. A Doctor can only change the status of their own
+// appointments — the UPDATE is scoped to doctor_id so guessing another
+// appointment's id has no effect.
+router.patch('/appointments/:id', auth, requireRole('Admin', 'Doctor', 'Nurse'), async (req, res) => {
   const { status } = req.body;
   try {
-    await pool.query(`UPDATE appointments SET status = ? WHERE id = ?`, [status, req.params.id]);
+    if (req.user.role === 'Doctor') {
+      const [result] = await pool.query(
+        `UPDATE appointments SET status = ? WHERE id = ? AND doctor_id = ?`,
+        [status, req.params.id, req.user.id]
+      );
+      if (result.affectedRows === 0) return res.status(404).json({ error: 'Appointment not found' });
+    } else {
+      await pool.query(`UPDATE appointments SET status = ? WHERE id = ?`, [status, req.params.id]);
+    }
     emitToAdmin('appointment:statusChanged', { id: req.params.id, status });
     res.json({ id: req.params.id, status });
   } catch (err) {
@@ -249,8 +332,39 @@ router.patch('/appointments/:id', async (req, res) => {
   }
 });
 
+// Doctor's own visit notes + prescription for an appointment they own.
+router.patch('/appointments/:id/notes', auth, requireRole('Doctor'), async (req, res) => {
+  const { doctorNotes, prescription } = req.body;
+  try {
+    const [result] = await pool.query(
+      `UPDATE appointments SET doctor_notes = ?, prescription = ? WHERE id = ? AND doctor_id = ?`,
+      [doctorNotes || null, prescription || null, req.params.id, req.user.id]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Appointment not found' });
+    res.json({ id: req.params.id, doctorNotes, prescription });
+  } catch (err) {
+    console.error('Update appointment notes error:', err);
+    res.status(500).json({ error: 'Failed to save notes' });
+  }
+});
+
+// Nurse (or Admin) marks a patient as arrived/checked in.
+router.patch('/appointments/:id/checkin', auth, requireRole('Admin', 'Nurse'), async (req, res) => {
+  try {
+    await pool.query(`UPDATE appointments SET checked_in_at = NOW() WHERE id = ?`, [req.params.id]);
+    const [[row]] = await pool.query(
+      `SELECT checked_in_at AS checkedInAt FROM appointments WHERE id = ?`,
+      [req.params.id]
+    );
+    res.json({ id: req.params.id, checkedInAt: row?.checkedInAt || null });
+  } catch (err) {
+    console.error('Check-in error:', err);
+    res.status(500).json({ error: 'Failed to check in patient' });
+  }
+});
+
 // DELETE appointment
-router.delete('/appointments/:id', async (req, res) => {
+router.delete('/appointments/:id', auth, requireRole('Admin', 'Nurse'), async (req, res) => {
   try {
     await pool.query(`DELETE FROM appointments WHERE id = ?`, [req.params.id]);
     res.json({ success: true });
@@ -260,7 +374,7 @@ router.delete('/appointments/:id', async (req, res) => {
   }
 });
 // GET all transactions (with customer name + derived type/reference)
-router.get('/transactions', async (req, res) => {
+router.get('/transactions', auth, requireRole('Admin'), async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT t.id,
@@ -278,7 +392,11 @@ router.get('/transactions', async (req, res) => {
               END AS reference,
               t.payment_method AS method,
               t.amount,
-              t.status
+              t.status,
+              t.order_id AS orderId,
+              t.appointment_id AS appointmentId,
+              t.refund_reason AS refundReason,
+              t.refunded_at AS refundedAt
        FROM transactions t
        LEFT JOIN users u ON t.user_id = u.id
        ORDER BY t.created_at DESC`
@@ -289,11 +407,145 @@ router.get('/transactions', async (req, res) => {
     res.status(500).json({ error: 'Failed to load transactions' });
   }
 });
+
+// Record-only refund: marks the transaction (and the order/appointment it
+// belongs to) as refunded, with a reason and who did it. Does NOT call
+// PayHere's refund API — the actual money movement still happens through
+// the PayHere merchant portal; this just records that it was done.
+router.post('/transactions/:id/refund', auth, requireRole('Admin'), async (req, res) => {
+  const { reason } = req.body;
+  try {
+    const [[txn]] = await pool.query(
+      `SELECT id, status, order_id AS orderId, appointment_id AS appointmentId FROM transactions WHERE id = ?`,
+      [req.params.id]
+    );
+    if (!txn) return res.status(404).json({ error: 'Transaction not found' });
+    if (txn.status === 'Refunded') return res.status(400).json({ error: 'Already refunded' });
+
+    await pool.query(
+      `UPDATE transactions SET status = 'Refunded', refund_reason = ?, refunded_at = NOW(), refunded_by = ?
+       WHERE id = ?`,
+      [reason || null, req.user.id, req.params.id]
+    );
+    if (txn.orderId) {
+      await pool.query(`UPDATE orders SET payment_status = 'refunded' WHERE id = ?`, [txn.orderId]);
+    }
+    if (txn.appointmentId) {
+      await pool.query(`UPDATE appointments SET payment_status = 'refunded' WHERE id = ?`, [txn.appointmentId]);
+    }
+    await logAction(req, 'refund', 'transaction', req.params.id, reason || null);
+    res.json({ id: req.params.id, status: 'Refunded', refundReason: reason || null });
+  } catch (err) {
+    console.error('Refund transaction error:', err);
+    res.status(500).json({ error: 'Failed to record refund' });
+  }
+});
+
+// Aggregate scheduling overview across all doctors — upcoming unavailable
+// dates and upcoming appointment load, so Admin doesn't need to open each
+// doctor's calendar individually.
+router.get('/doctors/scheduling', auth, requireRole('Admin'), async (req, res) => {
+  try {
+    const [doctors] = await pool.query(
+      `SELECT id, name, specialty FROM users WHERE role = 'Doctor' ORDER BY name`
+    );
+    const [upcomingCounts] = await pool.query(
+      `SELECT doctor_id AS doctorId, COUNT(*) AS upcomingAppointments
+       FROM appointments
+       WHERE doctor_id IS NOT NULL
+         AND appt_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 14 DAY)
+         AND status IN ('Pending', 'Confirmed')
+       GROUP BY doctor_id`
+    );
+    const [unavailable] = await pool.query(
+      `SELECT doctor_id AS doctorId, DATE_FORMAT(date, '%Y-%m-%d') AS date
+       FROM doctor_unavailability
+       WHERE date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+       ORDER BY date`
+    );
+
+    const countsByDoctor = Object.fromEntries(upcomingCounts.map(r => [r.doctorId, r.upcomingAppointments]));
+    const datesByDoctor = {};
+    unavailable.forEach(r => {
+      (datesByDoctor[r.doctorId] ||= []).push(r.date);
+    });
+
+    res.json(doctors.map(d => ({
+      id: d.id,
+      name: d.name,
+      specialty: d.specialty,
+      upcomingAppointments: countsByDoctor[d.id] || 0,
+      upcomingUnavailableDates: datesByDoctor[d.id] || [],
+    })));
+  } catch (err) {
+    console.error('Doctor scheduling error:', err);
+    res.status(500).json({ error: 'Failed to load scheduling overview' });
+  }
+});
+
+// Holiday management — GET is intentionally Admin-only here (the public,
+// unauthenticated version customers/the booking calendar use lives at
+// GET /api/appointments/holidays); this one is the admin list/edit view.
+router.get('/holidays', auth, requireRole('Admin'), async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, DATE_FORMAT(date, '%Y-%m-%d') AS date, name FROM holidays ORDER BY date`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get holidays error:', err);
+    res.status(500).json({ error: 'Failed to load holidays' });
+  }
+});
+
+router.post('/holidays', auth, requireRole('Admin'), async (req, res) => {
+  const { date, name } = req.body;
+  if (!date || !name) return res.status(400).json({ error: 'Date and name are required' });
+  try {
+    const [result] = await pool.query(
+      `INSERT INTO holidays (date, name) VALUES (?, ?)`,
+      [date, name]
+    );
+    await logAction(req, 'create', 'holiday', result.insertId, `${date} — ${name}`);
+    res.status(201).json({ id: result.insertId, date, name });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'A holiday is already set for that date' });
+    console.error('Create holiday error:', err);
+    res.status(500).json({ error: 'Failed to add holiday' });
+  }
+});
+
+router.delete('/holidays/:id', auth, requireRole('Admin'), async (req, res) => {
+  try {
+    await pool.query(`DELETE FROM holidays WHERE id = ?`, [req.params.id]);
+    await logAction(req, 'delete', 'holiday', req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete holiday error:', err);
+    res.status(500).json({ error: 'Failed to delete holiday' });
+  }
+});
+
+// GET recent admin/doctor/nurse actions for the audit log.
+router.get('/audit-log', auth, requireRole('Admin'), async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, actor_id AS actorId, actor_name AS actorName, actor_role AS actorRole,
+              action, entity_type AS entityType, entity_id AS entityId, details, created_at AS createdAt
+       FROM audit_log ORDER BY created_at DESC LIMIT 200`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get audit log error:', err);
+    res.status(500).json({ error: 'Failed to load audit log' });
+  }
+});
+
 // GET analytics — aggregated data for the Overview/Analytics charts.
 // Everything here is derived from `transactions` (now that payments.js
 // actually writes to it) plus `appointments` and `order_items`, so the
 // numbers reflect real paid revenue rather than just "orders placed".
-router.get('/analytics', async (req, res) => {
+router.get('/analytics', auth, requireRole('Admin'), async (req, res) => {
   try {
     // Revenue for each of the last 14 days (fills in zero for days with
     // no transactions, so the chart doesn't have gaps).

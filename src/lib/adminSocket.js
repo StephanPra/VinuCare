@@ -10,7 +10,10 @@ let socket = null;
 
 export function getAdminSocket() {
   if (!socket) {
-    socket = io(SOCKET_URL, { autoConnect: false });
+    // withCredentials so the httpOnly session cookie rides along on the
+    // handshake request — the server now verifies the caller is really
+    // an Admin before letting the socket into the 'admin' room.
+    socket = io(SOCKET_URL, { autoConnect: false, withCredentials: true });
   }
   if (!socket.connected) {
     socket.connect();

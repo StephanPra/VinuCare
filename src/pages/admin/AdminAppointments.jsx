@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
+import GlassSelect from '../appointments/GlassSelect';
 
 const API_BASE = `${API_BASE_URL}/api/admin/appointments`;
 const STATUS_OPTIONS = ['Pending', 'Confirmed', 'Completed', 'Cancelled'];
@@ -9,13 +10,20 @@ function badgeClass(status) {
   return 'admin-badge badge-' + status.toLowerCase();
 }
 
-export default function AdminAppointments() {
+export default function AdminAppointments({
+  hideDoctorColumn = false,
+  canDelete = true,
+  showNotesAction = false,
+  showCheckInAction = false,
+}) {
   const { confirm, success, error: notifyError } = useUIFeedback();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [notesTarget, setNotesTarget] = useState(null); // appointment being viewed/edited, or null
+  const [notesForm, setNotesForm] = useState({ doctorNotes: '', prescription: '' });
 
   useEffect(() => {
     loadAppointments();
@@ -25,7 +33,7 @@ export default function AdminAppointments() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API_BASE);
+      const res = await fetch(API_BASE, { credentials: 'include' });
       if (!res.ok) throw new Error('Server responded ' + res.status);
       const data = await res.json();
       setAppointments(data);
@@ -49,6 +57,7 @@ export default function AdminAppointments() {
     try {
       const res = await fetch(`${API_BASE}/${id}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
@@ -69,13 +78,50 @@ export default function AdminAppointments() {
     });
     if (!ok) return;
     try {
-      const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE', credentials: 'include' });
       if (!res.ok) throw new Error('Server responded ' + res.status);
       setAppointments(prev => prev.filter(a => a.id !== id));
       success('Appointment removed.');
     } catch (err) {
       console.error('Failed to delete appointment:', err);
       notifyError('Failed to delete appointment: ' + err.message);
+    }
+  }
+
+  async function handleCheckIn(id) {
+    try {
+      const res = await fetch(`${API_BASE}/${id}/checkin`, { method: 'PATCH', credentials: 'include' });
+      if (!res.ok) throw new Error('Server responded ' + res.status);
+      const data = await res.json();
+      setAppointments(cur => cur.map(a => (a.id === id ? { ...a, checkedInAt: data.checkedInAt } : a)));
+      success('Patient checked in.');
+    } catch (err) {
+      console.error('Failed to check in patient:', err);
+      notifyError('Failed to check in patient: ' + err.message);
+    }
+  }
+
+  function openNotes(a) {
+    setNotesTarget(a);
+    setNotesForm({ doctorNotes: a.doctorNotes || '', prescription: a.prescription || '' });
+  }
+
+  async function saveNotes(e) {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE}/${notesTarget.id}/notes`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notesForm),
+      });
+      if (!res.ok) throw new Error('Server responded ' + res.status);
+      setAppointments(cur => cur.map(a => (a.id === notesTarget.id ? { ...a, ...notesForm } : a)));
+      setNotesTarget(null);
+      success('Notes saved.');
+    } catch (err) {
+      console.error('Failed to save notes:', err);
+      notifyError('Failed to save notes: ' + err.message);
     }
   }
 
@@ -127,7 +173,7 @@ export default function AdminAppointments() {
                 <tr>
                   <th>Pet / Owner</th>
                   <th>Service</th>
-                  <th>Doctor</th>
+                  {!hideDoctorColumn && <th>Doctor</th>}
                   <th>Date & Time</th>
                   <th>Status</th>
                   <th></th>
@@ -141,19 +187,28 @@ export default function AdminAppointments() {
                       <div className="admin-cell-sub">{a.ownerName}</div>
                     </td>
                     <td>{a.service}</td>
-                    <td>{a.doctor || '—'}</td>
-                    <td>{a.date}<div className="admin-cell-sub">{a.time}</div></td>
+                    {!hideDoctorColumn && <td>{a.doctor || '—'}</td>}
+                    <td>
+                      {a.date}<div className="admin-cell-sub">{a.time}</div>
+                      {a.checkedInAt && <div className="admin-cell-sub">Checked in {new Date(a.checkedInAt).toLocaleTimeString('en-LK', { hour: '2-digit', minute: '2-digit' })}</div>}
+                    </td>
                     <td><span className={badgeClass(a.status)}>{a.status}</span></td>
                     <td>
                       <div className="admin-table-actions">
-                        <select
-                          className="admin-select"
+                        <GlassSelect
                           value={a.status}
                           onChange={e => updateStatus(a.id, e.target.value)}
-                        >
-                          {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                        <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(a.id)}>Delete</button>
+                          options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))}
+                        />
+                        {showCheckInAction && !a.checkedInAt && (
+                          <button className="admin-btn admin-btn-outline admin-btn-sm" onClick={() => handleCheckIn(a.id)}>Check In</button>
+                        )}
+                        {(showNotesAction || a.doctorNotes || a.prescription) && (
+                          <button className="admin-btn admin-btn-outline admin-btn-sm" onClick={() => openNotes(a)}>Notes</button>
+                        )}
+                        {canDelete && (
+                          <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(a.id)}>Delete</button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -164,6 +219,36 @@ export default function AdminAppointments() {
           </div>
         )}
       </div>
+
+      {notesTarget && (
+        <div className="admin-modal-overlay" onClick={() => setNotesTarget(null)}>
+          <div className="admin-modal" onClick={e => e.stopPropagation()}>
+            <h3>{notesTarget.petName} — {notesTarget.service}</h3>
+            <form onSubmit={saveNotes}>
+              <div className="admin-field">
+                <label>Visit notes</label>
+                <textarea
+                  value={notesForm.doctorNotes}
+                  readOnly={!showNotesAction}
+                  onChange={e => setNotesForm(f => ({ ...f, doctorNotes: e.target.value }))}
+                />
+              </div>
+              <div className="admin-field">
+                <label>Prescription</label>
+                <textarea
+                  value={notesForm.prescription}
+                  readOnly={!showNotesAction}
+                  onChange={e => setNotesForm(f => ({ ...f, prescription: e.target.value }))}
+                />
+              </div>
+              <div className="admin-modal-actions">
+                <button type="button" className="admin-btn admin-btn-outline" onClick={() => setNotesTarget(null)}>Close</button>
+                {showNotesAction && <button type="submit" className="admin-btn admin-btn-primary">Save</button>}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

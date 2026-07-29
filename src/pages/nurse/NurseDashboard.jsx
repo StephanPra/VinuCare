@@ -1,17 +1,22 @@
 import { useState } from 'react';
-import AdminProducts from '../admin/AdminProducts';
 import AdminAppointments from '../admin/AdminAppointments';
-import { CalendarIcon, BoxIcon } from '../../components/ui/Icons';
+import AdminProducts from '../admin/AdminProducts';
+import StaffMessages from '../../components/StaffMessages';
+import StaffSettings from '../../components/StaffSettings';
+import { CalendarIcon, BoxIcon, ChatIcon, SettingsIcon } from '../../components/ui/Icons';
 import '../../styles/admin.css';
 import vinuLogo from '../../assets/logo/vinucare-logo.png';
 
 const NAV_ITEMS = [
   { id: 'appointments', label: 'Appointments', icon: <CalendarIcon size={17} /> },
   { id: 'products', label: 'Products', icon: <BoxIcon size={17} /> },
+  { id: 'messages', label: 'Message Admin', icon: <ChatIcon size={17} /> },
+  { id: 'settings', label: 'Settings', icon: <SettingsIcon size={17} /> },
 ];
 
-export default function NurseDashboard({ onNavigate, nurseName = 'Nurse' }) {
+export default function NurseDashboard({ onNavigate, user, setUser }) {
   const [tab, setTab] = useState('appointments');
+  const nurseName = user?.name || 'Nurse';
 
   return (
     <div id="page-admin">
@@ -40,8 +45,10 @@ export default function NurseDashboard({ onNavigate, nurseName = 'Nurse' }) {
       </aside>
 
       <main className="admin-main">
-        {tab === 'appointments' && <AdminAppointments />}
+        {tab === 'appointments' && <AdminAppointments showCheckInAction />}
         {tab === 'products' && <AdminProducts />}
+        {tab === 'messages' && <StaffMessages user={user} />}
+        {tab === 'settings' && <StaffSettings user={user} setUser={setUser} />}
       </main>
     </div>
   );

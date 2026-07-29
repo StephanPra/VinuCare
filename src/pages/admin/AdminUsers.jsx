@@ -45,7 +45,7 @@ export default function AdminUsers() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API_BASE);
+      const res = await fetch(API_BASE, { credentials: 'include' });
       if (!res.ok) throw new Error('Server responded ' + res.status);
       const data = await res.json();
       setUsers(data);
@@ -99,7 +99,7 @@ export default function AdminUsers() {
     });
     if (!ok) return;
     try {
-      const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE', credentials: 'include' });
       if (!res.ok) throw new Error('Server responded ' + res.status);
       setUsers(prev => prev.filter(u => u.id !== id));
       success('User removed.');
@@ -117,6 +117,7 @@ export default function AdminUsers() {
       if (editingId) {
         const res = await fetch(`${API_BASE}/${editingId}`, {
           method: 'PUT',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         });
@@ -125,6 +126,7 @@ export default function AdminUsers() {
       } else {
         const res = await fetch(API_BASE, {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         });

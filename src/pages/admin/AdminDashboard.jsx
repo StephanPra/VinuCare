@@ -5,8 +5,13 @@ import AdminAppointments from './AdminAppointments';
 import AdminTransactions from './AdminTransactions';
 import AdminAnalytics from './AdminAnalytics';
 import AdminBanners from './AdminBanners';
+import AdminScheduling from './AdminScheduling';
+import AdminAuditLog from './AdminAuditLog';
+import AdminHolidays from './AdminHolidays';
+import AdminMessages from './AdminMessages';
+import StaffSettings from '../../components/StaffSettings';
 import { getAdminSocket } from '../../lib/adminSocket';
-import { ChartIcon, TrendIcon, UserIcon, BoxIcon, CalendarIcon, CardIcon, ImageIcon } from '../../components/ui/Icons';
+import { ChartIcon, TrendIcon, UserIcon, BoxIcon, CalendarIcon, CardIcon, ImageIcon, ChatIcon, SettingsIcon } from '../../components/ui/Icons';
 import '../../styles/admin.css';
 import vinuLogo from '../../assets/logo/vinucare-logo.png';
 import { API_BASE_URL } from '../../config/api';
@@ -20,7 +25,12 @@ const NAV_ITEMS = [
   { id: 'products', label: 'Products', icon: <BoxIcon size={17} /> },
   { id: 'banners', label: 'Banners', icon: <ImageIcon size={17} /> },
   { id: 'appointments', label: 'Appointments', icon: <CalendarIcon size={17} /> },
+  { id: 'scheduling', label: 'Doctor Scheduling', icon: <CalendarIcon size={17} /> },
+  { id: 'holidays', label: 'Holidays', icon: <CalendarIcon size={17} /> },
   { id: 'transactions', label: 'Transactions', icon: <CardIcon size={17} /> },
+  { id: 'auditlog', label: 'Audit Log', icon: <TrendIcon size={17} /> },
+  { id: 'messages', label: 'Messages', icon: <ChatIcon size={17} /> },
+  { id: 'settings', label: 'Settings', icon: <SettingsIcon size={17} /> },
 ];
 
 // Turns a raw socket event into a one-line, human-readable feed entry.
@@ -34,6 +44,8 @@ function describeEvent(event, payload) {
       return `New order #${payload.id} — ${payload.itemCount} item(s), Rs. ${Number(payload.total).toLocaleString('en-LK')}`;
     case 'payment:completed':
       return `Payment received — Rs. ${payload.amount.toLocaleString('en-LK')} via ${payload.method}`;
+    case 'message:new':
+      return `New message from ${payload.staffName} (${payload.staffRole})`;
     default:
       return event;
   }
@@ -43,17 +55,18 @@ function money(n) {
   return 'Rs. ' + Number(n).toLocaleString('en-LK');
 }
 
-export default function AdminDashboard({ onNavigate, adminName = 'Admin' }) {
+export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, setUser }) {
   const [tab, setTab] = useState('overview');
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [liveFeed, setLiveFeed] = useState([]);
+  const [lowStockJump, setLowStockJump] = useState(false);
 
   const loadSummary = () => {
     setLoading(true);
     setError(null);
-    fetch(`${API_BASE}/api/admin/summary`)
+    fetch(`${API_BASE}/api/admin/summary`, { credentials: 'include' })
       .then(res => {
         if (!res.ok) throw new Error(`Server responded ${res.status}`);
         return res.json();
@@ -88,6 +101,7 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin' }) {
       'appointment:statusChanged': handleEvent('appointment:statusChanged'),
       'order:new': handleEvent('order:new'),
       'payment:completed': handleEvent('payment:completed'),
+      'message:new': handleEvent('message:new'),
     };
 
     Object.entries(handlers).forEach(([event, fn]) => socket.on(event, fn));
@@ -107,7 +121,7 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin' }) {
             <button
               key={item.id}
               className={`admin-nav-btn ${tab === item.id ? 'active' : ''}`}
-              onClick={() => setTab(item.id)}
+              onClick={() => { setLowStockJump(false); setTab(item.id); }}
             >
               <span className="admin-nav-icon">{item.icon}</span>
               {item.label}
@@ -152,10 +166,23 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin' }) {
                   <div className="admin-stat-value">{summary.activeDoctors}</div>
                   <div className="admin-stat-sub">Currently on roster</div>
                 </div>
-                <div className="admin-stat-card">
+                <div
+                  className="admin-stat-card"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => { setLowStockJump(true); setTab('products'); }}
+                >
                   <div className="admin-stat-label">Low Stock Items</div>
                   <div className="admin-stat-value">{summary.lowStockProducts}</div>
-                  <div className="admin-stat-sub down">10 units or fewer</div>
+                  <div className="admin-stat-sub down">10 units or fewer — click to restock</div>
+                </div>
+                <div
+                  className="admin-stat-card"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => { setLowStockJump(false); setTab('messages'); }}
+                >
+                  <div className="admin-stat-label">Unread Messages</div>
+                  <div className="admin-stat-value">{summary.unreadMessages}</div>
+                  <div className={`admin-stat-sub ${summary.unreadMessages > 0 ? 'down' : ''}`}>From doctors & nurses</div>
                 </div>
               </div>
             )}
@@ -165,10 +192,13 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin' }) {
                 <h2>Quick actions</h2>
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <button className="admin-btn admin-btn-primary" onClick={() => setTab('users')}>+ Add Doctor / User</button>
-                <button className="admin-btn admin-btn-outline" onClick={() => setTab('products')}>+ Add Product</button>
-                <button className="admin-btn admin-btn-outline" onClick={() => setTab('appointments')}>Review Appointments</button>
-                <button className="admin-btn admin-btn-outline" onClick={() => setTab('transactions')}>View Transactions</button>
+                <button className="admin-btn admin-btn-primary" onClick={() => { setLowStockJump(false); setTab('users'); }}>+ Add Doctor / User</button>
+                <button className="admin-btn admin-btn-outline" onClick={() => { setLowStockJump(false); setTab('products'); }}>+ Add Product</button>
+                <button className="admin-btn admin-btn-outline" onClick={() => { setLowStockJump(false); setTab('appointments'); }}>Review Appointments</button>
+                <button className="admin-btn admin-btn-outline" onClick={() => { setLowStockJump(false); setTab('transactions'); }}>View Transactions</button>
+                <button className="admin-btn admin-btn-outline" onClick={() => { setLowStockJump(false); setTab('messages'); }}>View Messages</button>
+                <button className="admin-btn admin-btn-outline" onClick={() => { setLowStockJump(false); setTab('scheduling'); }}>Doctor Scheduling</button>
+                <button className="admin-btn admin-btn-outline" onClick={() => { setLowStockJump(false); setTab('holidays'); }}>Manage Holidays</button>
               </div>
             </div>
 
@@ -196,10 +226,15 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin' }) {
 
         {tab === 'analytics' && <AdminAnalytics />}
         {tab === 'users' && <AdminUsers />}
-        {tab === 'products' && <AdminProducts />}
+        {tab === 'products' && <AdminProducts initialLowStockOnly={lowStockJump} />}
         {tab === 'banners' && <AdminBanners />}
         {tab === 'appointments' && <AdminAppointments />}
+        {tab === 'scheduling' && <AdminScheduling />}
+        {tab === 'holidays' && <AdminHolidays />}
         {tab === 'transactions' && <AdminTransactions />}
+        {tab === 'auditlog' && <AdminAuditLog />}
+        {tab === 'messages' && <AdminMessages user={user} />}
+        {tab === 'settings' && <StaffSettings user={user} setUser={setUser} />}
       </main>
     </div>
   );

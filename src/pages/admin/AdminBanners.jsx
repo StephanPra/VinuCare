@@ -72,7 +72,7 @@ export default function AdminBanners() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API_BASE);
+      const res = await fetch(API_BASE, { credentials: 'include' });
       if (!res.ok) throw new Error('Server responded ' + res.status);
       setBanners(await res.json());
     } catch (err) {
@@ -145,6 +145,7 @@ export default function AdminBanners() {
       if (modalKey) {
         const res = await fetch(`${API_BASE}/${modalKey}`, {
           method: 'PUT',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         });
@@ -154,6 +155,7 @@ export default function AdminBanners() {
       } else {
         const res = await fetch(API_BASE, {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...form, page: addingPage }),
         });
@@ -178,7 +180,7 @@ export default function AdminBanners() {
     });
     if (!ok) return;
     try {
-      const res = await fetch(`${API_BASE}/${banner.bannerKey}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/${banner.bannerKey}`, { method: 'DELETE', credentials: 'include' });
       if (!res.ok) throw new Error('Server responded ' + res.status);
       setBanners(prev => prev.filter(b => b.bannerKey !== banner.bannerKey));
       success('Banner deleted.');

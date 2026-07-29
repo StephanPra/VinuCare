@@ -6,6 +6,40 @@ const { emitToAdmin } = require('../socket');
 
 const router = express.Router();
 
+// Business hours: closed Sundays entirely; Saturdays only until 2 PM.
+// Kept here (not in a DB table) since these are fixed weekly rules, not
+// one-off dates like the `holidays` table.
+const SATURDAY_CUTOFF_MINUTES = 14 * 60; // 2:00 PM
+
+function timeStringToMinutes(timeStr) {
+  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec((timeStr || '').trim());
+  if (!match) return null;
+  let [, h, m, period] = match;
+  h = Number(h) % 12;
+  if (period.toUpperCase() === 'PM') h += 12;
+  return h * 60 + Number(m);
+}
+
+// Returns an error message if the date/time falls outside business hours
+// or on a clinic holiday, or null if it's bookable.
+async function validateBookingWindow(apptDate, apptTime) {
+  const dayOfWeek = new Date(`${apptDate}T00:00:00`).getDay(); // 0 = Sunday, 6 = Saturday
+  if (dayOfWeek === 0) {
+    return 'The clinic is closed on Sundays — please pick another day.';
+  }
+  if (dayOfWeek === 6 && apptTime) {
+    const minutes = timeStringToMinutes(apptTime);
+    if (minutes !== null && minutes > SATURDAY_CUTOFF_MINUTES) {
+      return 'The vet is only available until 2 PM on Saturdays — please pick an earlier time.';
+    }
+  }
+  const [[holiday]] = await db.query('SELECT name FROM holidays WHERE date = ?', [apptDate]);
+  if (holiday) {
+    return `The clinic is closed for ${holiday.name} on this date — please pick another day.`;
+  }
+  return null;
+}
+
 // Get the list of doctors for the booking form dropdown (public - no auth needed)
 router.get('/doctors', async (req, res) => {
   try {
@@ -15,6 +49,21 @@ router.get('/doctors', async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Upcoming clinic holidays (public - no auth needed) — the booking
+// calendar grays these out regardless of which doctor is selected.
+router.get('/holidays', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT DATE_FORMAT(date, '%Y-%m-%d') AS date, name FROM holidays
+       WHERE date >= CURDATE() ORDER BY date`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get holidays error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -85,6 +134,11 @@ router.post('/', auth, async (req, res) => {
   const userId = req.user.id;
   const fee = getAppointmentFee(service);
   const normalizedDoctorId = doctorId || null;
+
+  const windowError = await validateBookingWindow(apptDate, apptTime);
+  if (windowError) {
+    return res.status(400).json({ message: windowError, code: 'OUTSIDE_BUSINESS_HOURS' });
+  }
 
   const conn = await db.getConnection();
   try {

@@ -13,6 +13,7 @@ const adminRoutes        = require('./routes/admin');
 const doctorRoutes = require('./routes/doctor');
 const chatbotRoutes = require('./routes/chatbot');
 const paymentRoutes = require('./routes/payments');
+const messageRoutes = require('./routes/messages');
 const { initSocket } = require('./socket');
 
 const app  = express();
@@ -34,6 +35,7 @@ app.use('/api/orders',       orderRoutes);
 app.use('/api/doctor', doctorRoutes); 
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.get('/', (req, res) => res.send('VinuCare API running ✅'));
 

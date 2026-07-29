@@ -196,6 +196,21 @@
   margin-left: 4px;
   vertical-align: middle;
 }
+/* Clinic-wide public holiday — same grayed-out treatment as a
+   doctor-marked unavailable day, but in the site's own accent color so
+   it reads as a different reason (nothing to toggle, clinic is closed). */
+.vc-cal-day--holiday {
+  background: rgba(124, 92, 232, 0.08);
+}
+.vc-cal-day--holiday .vc-cal-day-num::after {
+  content: '';
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--lavender-500);
+  margin-left: 4px;
+  vertical-align: middle;
+}
 
 .vc-cal-day-num {
   font-size: 0.8rem;

@@ -66,7 +66,7 @@ export default function AdminAnalytics() {
   const [pulse, setPulse] = useState(false);
 
   const loadAnalytics = useCallback(() => {
-    fetch(`${API_BASE}/api/admin/analytics`)
+    fetch(`${API_BASE}/api/admin/analytics`, { credentials: 'include' })
       .then((res) => {
         if (!res.ok) throw new Error(`Server responded ${res.status}`);
         return res.json();
