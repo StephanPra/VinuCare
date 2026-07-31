@@ -17,6 +17,12 @@ const messageRoutes = require('./routes/messages');
 const { initSocket } = require('./socket');
 
 const app  = express();
+// Railway (and most PaaS hosts) sit behind a reverse proxy that terminates
+// TLS and forwards plain HTTP, adding X-Forwarded-For/-Proto headers.
+// Without trusting the proxy, express-rate-limit sees those headers and
+// throws (it looks like a spoofed IP), and req.ip resolves to the proxy's
+// address for every user instead of their real one.
+app.set('trust proxy', 1);
 // Socket.IO needs the raw http.Server, not the Express app, so it can
 // upgrade connections to WebSockets on the same port Express listens on.
 const server = http.createServer(app);

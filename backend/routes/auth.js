@@ -12,8 +12,19 @@ const { authLimiter, emailActionLimiter } = require('../middleware/rateLimiters'
 const router = express.Router();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-const BACKEND_URL  = process.env.BACKEND_URL  || 'http://localhost:5000';
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours (email verification link)
+
+// BACKEND_URL is only used to build the link inside verification emails —
+// unlike FRONTEND_URL (needed for CORS) it's easy to forget to set on a
+// host like Railway, and a forgotten one silently falls back to
+// localhost:5000, mailing out a verify link no real user's browser can
+// ever reach. Since this only ever runs inside a request handler, we can
+// read the actual host the request came in on instead of trusting an env
+// var to be configured — req.protocol reports 'https' correctly here
+// because server.js sets 'trust proxy' for exactly this reason.
+function getBackendUrl(req) {
+  return process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
+}
 const AUTH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // matches the JWT's own 7d expiry
 
 // Session lives in an httpOnly cookie so the JWT is never readable from
@@ -25,7 +36,12 @@ const AUTH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // matches the JWT's own
 // 'none' requires secure:true, which only works over HTTPS, so dev (plain
 // http://localhost) has to stay on 'lax'/non-secure or the cookie would
 // never be set at all.
-const isProd = process.env.NODE_ENV === 'production';
+// Deriving this from FRONTEND_URL instead of NODE_ENV — hosts like Railway
+// don't set NODE_ENV=production for you, and forgetting to set it there
+// silently keeps cookies on sameSite:'lax'/secure:false in prod, which
+// browsers then refuse to send back on cross-site requests (Vercel ->
+// Railway), breaking every /api/auth/me-style call right after login.
+const isProd = !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(FRONTEND_URL);
 function setAuthCookie(res, token) {
   res.cookie('token', token, {
     httpOnly: true,
@@ -54,7 +70,7 @@ function makeVerificationToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
-async function issueAndSendVerification(user) {
+async function issueAndSendVerification(user, req) {
   const token   = makeVerificationToken();
   const expires = new Date(Date.now() + TOKEN_TTL_MS);
 
@@ -63,7 +79,7 @@ async function issueAndSendVerification(user) {
     [token, expires, user.id]
   );
 
-  const verifyUrl = `${BACKEND_URL}/api/auth/verify-email?token=${token}`;
+  const verifyUrl = `${getBackendUrl(req)}/api/auth/verify-email?token=${token}`;
   await sendVerificationEmail(user.email, user.name, verifyUrl);
 }
 
@@ -85,7 +101,7 @@ router.post('/signup', authLimiter, async (req, res) => {
       [name, email, hashed]
     );
 
-    await issueAndSendVerification({ id: result.insertId, name, email });
+    await issueAndSendVerification({ id: result.insertId, name, email }, req);
 
     res.status(201).json({
       message: 'Account created. Please check your email to verify your account before signing in.',
@@ -161,7 +177,7 @@ router.post('/resend-verification', emailActionLimiter, async (req, res) => {
       return res.json({ message: 'If that account needs verification, a new email has been sent.' });
     }
 
-    await issueAndSendVerification(rows[0]);
+    await issueAndSendVerification(rows[0], req);
     res.json({ message: 'If that account needs verification, a new email has been sent.' });
   } catch (err) {
     console.error(err);
