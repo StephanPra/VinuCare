@@ -100,7 +100,10 @@ export default function AdminUsers() {
     if (!ok) return;
     try {
       const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE', credentials: 'include' });
-      if (!res.ok) throw new Error('Server responded ' + res.status);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || 'Server responded ' + res.status);
+      }
       setUsers(prev => prev.filter(u => u.id !== id));
       success('User removed.');
     } catch (err) {

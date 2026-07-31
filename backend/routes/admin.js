@@ -100,14 +100,38 @@ router.put('/users/:id', auth, requireRole('Admin'), async (req, res) => {
 });
 
 // DELETE user
+// Full hard delete — wipes every record tied to this user (orders, order
+// items, appointments booked by them, appointments they were the assigned
+// doctor for, reviews, transactions) so the FK constraints on those tables
+// never block the delete. This is intentionally destructive and
+// irreversible: it also erases their payment/appointment history, not just
+// the account. There is no soft-delete option here — Suspend the account
+// via Edit instead if the history needs to be kept.
 router.delete('/users/:id', auth, requireRole('Admin'), async (req, res) => {
+  const userId = req.params.id;
+  const conn = await pool.getConnection();
   try {
-    await pool.query(`DELETE FROM users WHERE id = ?`, [req.params.id]);
-    await logAction(req, 'delete', 'user', req.params.id);
+    await conn.beginTransaction();
+
+    const [orders] = await conn.query(`SELECT id FROM orders WHERE user_id = ?`, [userId]);
+    const orderIds = orders.map(o => o.id);
+    if (orderIds.length) {
+      await conn.query(`DELETE FROM order_items WHERE order_id IN (?)`, [orderIds]);
+    }
+    await conn.query(`DELETE FROM orders WHERE user_id = ?`, [userId]);
+    await conn.query(`DELETE FROM appointments WHERE user_id = ? OR doctor_id = ?`, [userId, userId]);
+    await conn.query(`DELETE FROM reviews WHERE user_id = ?`, [userId]);
+    await conn.query(`DELETE FROM users WHERE id = ?`, [userId]);
+
+    await conn.commit();
+    await logAction(req, 'delete', 'user', userId);
     res.json({ success: true });
   } catch (err) {
+    await conn.rollback();
     console.error('Delete user error:', err);
     res.status(500).json({ error: 'Failed to delete user' });
+  } finally {
+    conn.release();
   }
 });
 // GET all products — this is also the public shop catalog fetch
