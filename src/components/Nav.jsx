@@ -330,14 +330,12 @@ export default function Nav({ activePage, onNavigate, user, setUser }) {
         {NAV_LINKS.map((link) => (
           <a key={link.key} onClick={() => goTo(link.key)}>{link.label}</a>
         ))}
-        {user ? (
+        {user && (
           <>
             {!isStaff && <a onClick={() => goTo('profile')}>View Profile</a>}
             {isStaff && <a onClick={goToDashboard}>My Dashboard</a>}
             <a onClick={handleLogout}>Log Out</a>
           </>
-        ) : (
-          <a onClick={() => goTo('login')}>Log In</a>
         )}
       </div>
     </>

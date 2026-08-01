@@ -174,12 +174,13 @@ nav.liquid-nav{
    hamburger well before that, not just at phone widths, or the bar
    overflows horizontally on tablets/narrow laptop windows. */
 @media(max-width:1080px){
-  .nav-links,.nav-cta,.nav-login-btn{display:none;}
+  .nav-links,.nav-cta{display:none;}
   .hamburger{display:flex;}
   nav.liquid-nav{padding:0 4%;}
   .nav-right{gap:4px;}
   .nav-account-btn{padding:6px 10px;font-size:.8rem;}
   .nav-account-dropdown{min-width:210px;right:-4%;}
+  .nav-login-btn{padding:6px 12px;font-size:.8rem;}
 }
 @media(max-width:680px){
   .footer-grid{grid-template-columns:1fr;gap:24px;}
