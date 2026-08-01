@@ -32,6 +32,29 @@ const GoogleIcon = () => (
   </svg>
 );
 
+// Google Sign-In authenticates with a token, not a password, so there's
+// nothing for the browser's password manager to save — that's true on any
+// site using "Continue with Google", not specific to this app. The closest
+// real equivalent is the Credential Management API's FederatedCredential,
+// which lets supporting browsers offer a one-click "sign in as [you]"
+// prompt next time instead of replaying the Google popup. Browser support
+// is spotty (several browsers, including recent Chrome, have dropped it),
+// so this is a no-op with no visible effect in those — it only helps
+// where it's actually supported.
+async function rememberFederatedSignIn(user) {
+  if (!user?.email || typeof window.FederatedCredential !== 'function' || !navigator.credentials?.store) return;
+  try {
+    await navigator.credentials.store(new window.FederatedCredential({
+      id: user.email,
+      provider: 'https://accounts.google.com',
+      name: user.name || undefined,
+      iconURL: user.avatar || undefined,
+    }));
+  } catch {
+    // Credential Management API declined/unsupported — safe to ignore.
+  }
+}
+
 // Drop-in replacement for the old static "Continue with Google" button.
 // Renders Google's own button (required by their branding terms) once
 // VITE_GOOGLE_CLIENT_ID is set; otherwise falls back to a disabled
@@ -60,6 +83,7 @@ export default function GoogleAuthButton({ onAuth, onError }) {
               });
               const data = await res.json();
               if (!res.ok) { onError?.(data.message || 'Google sign-in failed'); return; }
+              await rememberFederatedSignIn(data.user);
               onAuth(data);
             } catch {
               onError?.('Cannot connect to server. Make sure the backend is running.');
