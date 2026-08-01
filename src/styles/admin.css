@@ -78,15 +78,17 @@ html[data-theme="dark"] .admin-modal {
   height: 100vh;
 }
 
+.admin-sidebar-header {
+  padding: 0 8px 26px;
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+  margin-bottom: 18px;
+}
 .admin-brand {
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 800;
   font-size: 1.15rem;
-  padding: 0 8px 26px;
-  border-bottom: 1px solid rgba(255,255,255,0.14);
-  margin-bottom: 18px;
 }
 .admin-brand-badge {
   background: rgba(255,255,255,0.16);
@@ -95,6 +97,62 @@ html[data-theme="dark"] .admin-modal {
   font-size: .65rem;
   letter-spacing: .06em;
   font-weight: 700;
+}
+
+/* ---------- Notification bell (sidebar header) ---------- */
+.notif-bell-wrap { position: relative; flex-shrink: 0; }
+.notif-bell-btn {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.notif-bell-btn:hover { background: rgba(255,255,255,0.2); }
+.notif-badge {
+  position: absolute; top: -6px; right: -6px;
+  background: var(--admin-rose); color: #fff;
+  font-size: .62rem; font-weight: 700;
+  min-width: 16px; height: 16px; padding: 0 3px;
+  border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--admin-indigo-dark);
+}
+.notif-dropdown {
+  position: absolute; top: calc(100% + 10px); right: -8px;
+  width: 320px; max-width: 80vw;
+  background: var(--admin-card);
+  color: var(--admin-ink);
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  box-shadow: 0 20px 48px rgba(30,27,46,0.25);
+  z-index: 400;
+  overflow: hidden;
+}
+.notif-dropdown-head {
+  font-weight: 700; font-size: .85rem;
+  padding: 12px 14px; border-bottom: 1px solid var(--admin-border);
+}
+.notif-list { max-height: 320px; overflow-y: auto; }
+.notif-item { padding: 10px 14px; border-bottom: 1px solid var(--admin-border); }
+.notif-item:last-child { border-bottom: none; }
+.notif-item.unread { background: rgba(124,92,232,0.06); }
+.notif-item-msg {
+  font-size: .78rem; font-family: monospace; color: var(--admin-ink);
+  word-break: break-word;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.notif-item-time { font-size: .7rem; color: var(--admin-muted); margin-top: 4px; }
+.notif-empty { padding: 20px 14px; text-align: center; color: var(--admin-muted); font-size: .85rem; }
+
+.admin-nav-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--admin-rose);
+  margin-left: auto; flex-shrink: 0;
 }
 
 /* min-height: 0 lets this shrink below its content size inside the fixed-
@@ -673,7 +731,7 @@ html[data-theme="dark"] .admin-field input:-webkit-autofill:active {
 @media (max-width: 900px) {
   #page-admin { flex-direction: column; }
   .admin-sidebar { width: 100%; height: auto; position: static; flex-direction: row; overflow-x: auto; padding: 14px; }
-  .admin-brand { display: none; }
+  .admin-sidebar-header { display: none; }
   .admin-nav { flex-direction: row; flex: none; }
   .admin-nav-btn { white-space: nowrap; }
   .admin-sidebar-footer { display: none; }

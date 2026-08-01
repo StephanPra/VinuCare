@@ -565,6 +565,29 @@ router.get('/audit-log', auth, requireRole('Admin'), async (req, res) => {
   }
 });
 
+router.get('/error-logs', auth, requireRole('Admin'), async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, message, route, method, read_at AS readAt, created_at AS createdAt
+       FROM error_logs ORDER BY created_at DESC LIMIT 200`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get error logs error:', err);
+    res.status(500).json({ error: 'Failed to load error logs' });
+  }
+});
+
+router.post('/error-logs/mark-read', auth, requireRole('Admin'), async (req, res) => {
+  try {
+    await pool.query('UPDATE error_logs SET read_at = NOW() WHERE read_at IS NULL');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Mark error logs read error:', err);
+    res.status(500).json({ error: 'Failed to mark error logs read' });
+  }
+});
+
 // GET analytics — aggregated data for the Overview/Analytics charts.
 // Everything here is derived from `transactions` (now that payments.js
 // actually writes to it) plus `appointments` and `order_items`, so the

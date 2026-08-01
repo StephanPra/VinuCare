@@ -15,6 +15,13 @@ const chatbotRoutes = require('./routes/chatbot');
 const paymentRoutes = require('./routes/payments');
 const messageRoutes = require('./routes/messages');
 const { initSocket } = require('./socket');
+const { installErrorReporting } = require('./errorLog');
+
+// Installed before anything else runs so every error from this point on —
+// including ones during startup — flows into the admin error log.
+installErrorReporting();
+process.on('unhandledRejection', (reason) => console.error('Unhandled promise rejection:', reason));
+process.on('uncaughtException', (err) => console.error('Uncaught exception:', err));
 
 const app  = express();
 // Railway (and most PaaS hosts) sit behind a reverse proxy that terminates
@@ -44,6 +51,15 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/messages', messageRoutes);
 
 app.get('/', (req, res) => res.send('VinuCare API running ✅'));
+
+// Catch-all — routes already handle their own errors, but anything that
+// slips past them (a thrown error passed to next(), a bug in middleware)
+// still gets logged and answered instead of hanging the request.
+app.use((err, req, res, next) => {
+  console.error(`Unhandled error [${req.method} ${req.originalUrl}]:`, err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ message: 'Server error' });
+});
 
 initSocket(server);
 

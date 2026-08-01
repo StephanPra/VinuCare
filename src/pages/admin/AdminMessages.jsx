@@ -10,7 +10,7 @@ function formatPreviewTime(iso) {
   return new Date(iso).toLocaleDateString('en-LK', { month: 'short', day: 'numeric' });
 }
 
-export default function AdminMessages({ user }) {
+export default function AdminMessages({ user, onRead }) {
   const [threads, setThreads] = useState([]);
   const [threadsLoading, setThreadsLoading] = useState(true);
   const [threadsError, setThreadsError] = useState(null);
@@ -56,6 +56,7 @@ export default function AdminMessages({ user }) {
       if (!res.ok) throw new Error('Server responded ' + res.status);
       setMessages(await res.json());
       setThreads((prev) => prev.map((t) => (t.id === staffId ? { ...t, unreadCount: 0 } : t)));
+      onRead?.();
     } catch (err) {
       console.error('Failed to load thread:', err);
     } finally {

@@ -7,11 +7,13 @@ import AdminAnalytics from './AdminAnalytics';
 import AdminBanners from './AdminBanners';
 import AdminScheduling from './AdminScheduling';
 import AdminAuditLog from './AdminAuditLog';
+import AdminErrorLogs from './AdminErrorLogs';
 import AdminHolidays from './AdminHolidays';
 import AdminMessages from './AdminMessages';
 import StaffSettings from '../../components/StaffSettings';
+import NotificationBell from '../../components/admin/NotificationBell';
 import { getAdminSocket } from '../../lib/adminSocket';
-import { ChartIcon, TrendIcon, UserIcon, BoxIcon, CalendarIcon, CardIcon, ImageIcon, ChatIcon, SettingsIcon } from '../../components/ui/Icons';
+import { ChartIcon, TrendIcon, UserIcon, BoxIcon, CalendarIcon, CardIcon, ImageIcon, ChatIcon, SettingsIcon, AlertIcon } from '../../components/ui/Icons';
 import '../../styles/admin.css';
 import vinuLogo from '../../assets/logo/vinucare-logo.png';
 import { API_BASE_URL } from '../../config/api';
@@ -29,6 +31,7 @@ const NAV_ITEMS = [
   { id: 'holidays', label: 'Holidays', icon: <CalendarIcon size={17} /> },
   { id: 'transactions', label: 'Transactions', icon: <CardIcon size={17} /> },
   { id: 'auditlog', label: 'Audit Log', icon: <TrendIcon size={17} /> },
+  { id: 'errorlogs', label: 'Error Logs', icon: <AlertIcon size={17} /> },
   { id: 'messages', label: 'Messages', icon: <ChatIcon size={17} /> },
   { id: 'settings', label: 'Settings', icon: <SettingsIcon size={17} /> },
 ];
@@ -76,8 +79,10 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
       .finally(() => setLoading(false));
   };
 
+  // Not gated to the Overview tab — summary.unreadMessages also drives the
+  // red dot on the Messages nav item, which needs to stay accurate no
+  // matter which tab is currently open.
   useEffect(() => {
-    if (tab !== 'overview') return;
     loadSummary();
   }, [tab]);
 
@@ -113,8 +118,11 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
   return (
     <div id="page-admin">
       <aside className="admin-sidebar">
-        <div className="admin-brand" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src={vinuLogo} alt="" style={{ width: 22, height: 22, borderRadius: 6, display: 'block' }} /> VinuCare <span className="admin-brand-badge">ADMIN</span>
+        <div className="admin-sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div className="admin-brand" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src={vinuLogo} alt="" style={{ width: 22, height: 22, borderRadius: 6, display: 'block' }} /> VinuCare <span className="admin-brand-badge">ADMIN</span>
+          </div>
+          <NotificationBell />
         </div>
         <nav className="admin-nav">
           {NAV_ITEMS.map(item => (
@@ -125,6 +133,7 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
             >
               <span className="admin-nav-icon">{item.icon}</span>
               {item.label}
+              {item.id === 'messages' && summary?.unreadMessages > 0 && <span className="admin-nav-dot" />}
             </button>
           ))}
         </nav>
@@ -233,7 +242,8 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
         {tab === 'holidays' && <AdminHolidays />}
         {tab === 'transactions' && <AdminTransactions />}
         {tab === 'auditlog' && <AdminAuditLog />}
-        {tab === 'messages' && <AdminMessages user={user} />}
+        {tab === 'errorlogs' && <AdminErrorLogs />}
+        {tab === 'messages' && <AdminMessages user={user} onRead={loadSummary} />}
         {tab === 'settings' && <StaffSettings user={user} setUser={setUser} />}
       </main>
     </div>
