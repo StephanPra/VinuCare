@@ -330,7 +330,6 @@ export default function Nav({ activePage, onNavigate, user, setUser }) {
         {NAV_LINKS.map((link) => (
           <a key={link.key} onClick={() => goTo(link.key)}>{link.label}</a>
         ))}
-        <a onClick={toggleTheme}>{theme === 'dark' ? 'Dark' : 'Light'} Mode</a>
         {user ? (
           <>
             {!isStaff && <a onClick={() => goTo('profile')}>View Profile</a>}
