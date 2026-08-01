@@ -4,7 +4,7 @@ import ThemeToggle from './ThemeToggle';
 import { useTheme } from '../context/ThemeContext';
 import { notifyAuthChanged } from '../lib/authEvents';
 import vinuLogo from '../assets/logo/vinucare-logo.png';
-import { CartIcon, SunIcon, MoonIcon, ReceiptIcon, ChartIcon, LogoutIcon } from './ui/Icons';
+import { CartIcon, SunIcon, MoonIcon, ReceiptIcon, ChartIcon, LogoutIcon, MenuIcon } from './ui/Icons';
 import Avatar from './ui/Avatar';
 import { API_BASE_URL } from '../config/api';
 
@@ -320,8 +320,8 @@ export default function Nav({ activePage, onNavigate, user, setUser }) {
             <button className="nav-login-btn" onClick={() => goTo('login')}>Log In</button>
           )}
 
-          <button className="hamburger" onClick={() => setMenuOpen(o => !o)}>
-            <span /><span /><span />
+          <button className="hamburger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu" aria-expanded={menuOpen}>
+            <MenuIcon size={22} />
           </button>
         </div>
       </nav>

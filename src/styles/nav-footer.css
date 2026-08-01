@@ -58,8 +58,7 @@ nav.liquid-nav{
   display:none;align-items:center;justify-content:center;
 }
 .cart-badge.show{display:flex;}
-.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:8px;}
-.hamburger span{width:22px;height:2px;background:var(--text-dark);border-radius:2px;transition:all .3s;}
+.hamburger{display:none;align-items:center;justify-content:center;cursor:pointer;background:none;border:none;padding:8px;color:var(--text-dark);}
 .mobile-menu{
   display:none;position:fixed;top:var(--nav-h);left:0;right:0;
   background:var(--white);border-bottom:1px solid var(--border);
