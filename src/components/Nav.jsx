@@ -4,7 +4,7 @@ import ThemeToggle from './ThemeToggle';
 import { useTheme } from '../context/ThemeContext';
 import { notifyAuthChanged } from '../lib/authEvents';
 import vinuLogo from '../assets/logo/vinucare-logo.png';
-import { HomeIcon, PawIcon, CalendarIcon, BagIcon, StarIcon, CartIcon, SunIcon, MoonIcon, ReceiptIcon, ChartIcon, LogoutIcon, KeyIcon } from './ui/Icons';
+import { CartIcon, SunIcon, MoonIcon, ReceiptIcon, ChartIcon, LogoutIcon } from './ui/Icons';
 import Avatar from './ui/Avatar';
 import { API_BASE_URL } from '../config/api';
 
@@ -327,25 +327,18 @@ export default function Nav({ activePage, onNavigate, user, setUser }) {
       </nav>
 
       <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
-        {NAV_LINKS.map((link) => {
-          const MobileIcon = { home: HomeIcon, services: PawIcon, appointments: CalendarIcon, shop: BagIcon, reviews: StarIcon }[link.key];
-          return (
-            <a key={link.key} onClick={() => goTo(link.key)} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <MobileIcon size={16} /> {link.label}
-            </a>
-          );
-        })}
-        <a onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {theme === 'dark' ? <MoonIcon size={16} /> : <SunIcon size={16} />} {theme === 'dark' ? 'Dark' : 'Light'} Mode
-        </a>
+        {NAV_LINKS.map((link) => (
+          <a key={link.key} onClick={() => goTo(link.key)}>{link.label}</a>
+        ))}
+        <a onClick={toggleTheme}>{theme === 'dark' ? 'Dark' : 'Light'} Mode</a>
         {user ? (
           <>
-            {!isStaff && <a onClick={() => goTo('profile')} style={{ display: 'flex', alignItems: 'center', gap: 8 }}><ReceiptIcon size={16} /> View Profile</a>}
-            {isStaff && <a onClick={goToDashboard} style={{ display: 'flex', alignItems: 'center', gap: 8 }}><ChartIcon size={16} /> My Dashboard</a>}
-            <a onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: 8 }}><LogoutIcon size={16} /> Log Out</a>
+            {!isStaff && <a onClick={() => goTo('profile')}>View Profile</a>}
+            {isStaff && <a onClick={goToDashboard}>My Dashboard</a>}
+            <a onClick={handleLogout}>Log Out</a>
           </>
         ) : (
-          <a onClick={() => goTo('login')} style={{ display: 'flex', alignItems: 'center', gap: 8 }}><KeyIcon size={16} /> Log In</a>
+          <a onClick={() => goTo('login')}>Log In</a>
         )}
       </div>
     </>
