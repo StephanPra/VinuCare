@@ -655,7 +655,7 @@ export default function Home({ onNavigate }) {
               const petLabel = review.pet || 'Pet Owner';
               const text = review.review || '';
               const service = review.service || 'General';
-              const stars = review.stars || '★★★★★';
+              const stars = '⭐'.repeat((review.stars?.match(/[★⭐]/g) || []).length || 5);
               const initial = name.trim().charAt(0).toUpperCase() || '?';
 
               return (

@@ -57,7 +57,8 @@ export default function Login({ onNavigate, setUser, redirectAfterLogin }) {
     onNavigate(destination);
   };
 
-  const submit = async () => {
+  const submit = async (e) => {
+    e?.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
@@ -139,42 +140,44 @@ export default function Login({ onNavigate, setUser, redirectAfterLogin }) {
 
           <div className="auth-or"><span>or</span></div>
 
-          <div className="auth-field">
-            <label>Email address</label>
-            <input
-              type="email"
-              className={`auth-input${errors.email ? ' err' : ''}`}
-              placeholder="you@example.com"
-              value={email}
-              onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); }}
-            />
-            {errors.email && <span className="auth-err-msg">{errors.email}</span>}
-          </div>
-
-          <div className="auth-field">
-            <div className="auth-label-row">
-              <label>Password</label>
-              <button className="auth-link-btn" type="button" onClick={() => onNavigate('forgot-password')}>Forgot password?</button>
-            </div>
-            <div className="auth-pw-wrap">
+          <form onSubmit={submit}>
+            <div className="auth-field">
+              <label>Email address</label>
               <input
-                type={showPw ? 'text' : 'password'}
-                className={`auth-input${errors.password ? ' err' : ''}`}
-                placeholder="Your password"
-                value={password}
-                onChange={e => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '' })); }}
+                type="email"
+                className={`auth-input${errors.email ? ' err' : ''}`}
+                placeholder="you@example.com"
+                value={email}
+                onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); }}
               />
-              <button className="auth-eye" type="button" onClick={() => setShowPw(v => !v)}>
-                {showPw ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
+              {errors.email && <span className="auth-err-msg">{errors.email}</span>}
             </div>
-            {errors.password && <span className="auth-err-msg">{errors.password}</span>}
-          </div>
 
-          <button className="auth-btn-primary" onClick={submit} disabled={loading}>
-            {loading ? <span className="auth-spinner" /> : null}
-            {loading ? 'Signing in…' : 'Sign In'}
-          </button>
+            <div className="auth-field">
+              <div className="auth-label-row">
+                <label>Password</label>
+                <button className="auth-link-btn" type="button" onClick={() => onNavigate('forgot-password')}>Forgot password?</button>
+              </div>
+              <div className="auth-pw-wrap">
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  className={`auth-input${errors.password ? ' err' : ''}`}
+                  placeholder="Your password"
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '' })); }}
+                />
+                <button className="auth-eye" type="button" onClick={() => setShowPw(v => !v)}>
+                  {showPw ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
+              {errors.password && <span className="auth-err-msg">{errors.password}</span>}
+            </div>
+
+            <button className="auth-btn-primary" type="submit" disabled={loading}>
+              {loading ? <span className="auth-spinner" /> : null}
+              {loading ? 'Signing in…' : 'Sign In'}
+            </button>
+          </form>
 
           <p className="auth-switch">
             Don't have an account?{' '}

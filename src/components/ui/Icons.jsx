@@ -419,6 +419,14 @@ export function MenuIcon(props) {
   );
 }
 
+export function StarIcon(props) {
+  return (
+    <Base {...props}>
+      <path d="M11 2.7l2.4 5.1 5.5.7-4 3.9 1 5.6-4.9-2.7-4.9 2.7 1-5.6-4-3.9 5.5-.7z" />
+    </Base>
+  );
+}
+
 export function AwardIcon(props) {
   return (
     <Base {...props}>

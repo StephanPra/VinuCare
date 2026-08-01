@@ -4,7 +4,7 @@ import ThemeToggle from './ThemeToggle';
 import { useTheme } from '../context/ThemeContext';
 import { notifyAuthChanged } from '../lib/authEvents';
 import vinuLogo from '../assets/logo/vinucare-logo.png';
-import { HomeIcon, PawIcon, CalendarIcon, BagIcon, CartIcon, SunIcon, MoonIcon, ReceiptIcon, ChartIcon, LogoutIcon, KeyIcon } from './ui/Icons';
+import { HomeIcon, PawIcon, CalendarIcon, BagIcon, StarIcon, CartIcon, SunIcon, MoonIcon, ReceiptIcon, ChartIcon, LogoutIcon, KeyIcon } from './ui/Icons';
 import Avatar from './ui/Avatar';
 import { API_BASE_URL } from '../config/api';
 
@@ -328,10 +328,10 @@ export default function Nav({ activePage, onNavigate, user, setUser }) {
 
       <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
         {NAV_LINKS.map((link) => {
-          const MobileIcon = { home: HomeIcon, services: PawIcon, appointments: CalendarIcon, shop: BagIcon, reviews: null }[link.key];
+          const MobileIcon = { home: HomeIcon, services: PawIcon, appointments: CalendarIcon, shop: BagIcon, reviews: StarIcon }[link.key];
           return (
             <a key={link.key} onClick={() => goTo(link.key)} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {MobileIcon ? <MobileIcon size={16} /> : <span style={{ fontSize: '0.95rem' }}>★</span>} {link.label}
+              <MobileIcon size={16} /> {link.label}
             </a>
           );
         })}

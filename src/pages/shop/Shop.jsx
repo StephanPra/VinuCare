@@ -39,6 +39,7 @@ export default function Shop({ onNavigate, selectedProductId, isActive = true })
   const [sort, setSort] = useState('default');
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [showCompareModal, setShowCompareModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // The detail product is now derived from the URL (selectedProductId),
   // not local-only state — this keeps back/forward buttons in sync.
@@ -119,13 +120,22 @@ export default function Shop({ onNavigate, selectedProductId, isActive = true })
       <div className="shop-layout">
 
         {/* SIDEBAR */}
-        <aside className="shop-sidebar open">
+        <button
+          type="button"
+          className="shop-sidebar-toggle"
+          onClick={() => setSidebarOpen(o => !o)}
+          aria-expanded={sidebarOpen}
+        >
+          Categories — {categoryLabelFor(currentCategory)} {sidebarOpen ? '▲' : '▼'}
+        </button>
+
+        <aside className={`shop-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-title">Categories</div>
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
               className={`sidebar-cat-btn ${currentCategory === cat.id ? 'active' : ''}`}
-              onClick={() => setCurrentCategory(cat.id)}
+              onClick={() => { setCurrentCategory(cat.id); setSidebarOpen(false); }}
             >
               <div className="sidebar-cat-img-wrap">
                 <img src={cat.img} alt={cat.label} />

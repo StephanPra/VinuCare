@@ -4,12 +4,14 @@ function RatingsSummary({ reviews }) {
   const countByStars = (starStr) =>
     reviews.filter(r => (r.stars || '').includes(starStr)).length;
 
+  const starCount = (r) => ((r.stars || '').match(/[★⭐]/g) || []).length;
+
   const counts = {
-    5: reviews.filter(r => (r.stars || '').split('⭐').length - 1 === 5).length,
-    4: reviews.filter(r => (r.stars || '').split('⭐').length - 1 === 4).length,
-    3: reviews.filter(r => (r.stars || '').split('⭐').length - 1 === 3).length,
-    2: reviews.filter(r => (r.stars || '').split('⭐').length - 1 === 2).length,
-    1: reviews.filter(r => (r.stars || '').split('⭐').length - 1 === 1).length,
+    5: reviews.filter(r => starCount(r) === 5).length,
+    4: reviews.filter(r => starCount(r) === 4).length,
+    3: reviews.filter(r => starCount(r) === 3).length,
+    2: reviews.filter(r => starCount(r) === 2).length,
+    1: reviews.filter(r => starCount(r) === 1).length,
   };
 
   const avgRating = total === 0 ? 0 :
