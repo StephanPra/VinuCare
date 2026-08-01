@@ -16,6 +16,7 @@ const paymentRoutes = require('./routes/payments');
 const messageRoutes = require('./routes/messages');
 const { initSocket } = require('./socket');
 const { installErrorReporting } = require('./errorLog');
+const { startReminderScheduler } = require('./appointmentReminders');
 
 // Installed before anything else runs so every error from this point on —
 // including ones during startup — flows into the admin error log.
@@ -62,5 +63,6 @@ app.use((err, req, res, next) => {
 });
 
 initSocket(server);
+startReminderScheduler();
 
 server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

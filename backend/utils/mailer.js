@@ -161,4 +161,26 @@ async function sendAppointmentCancelledEmail(to, name, appt, rebookUrl) {
   return send(to, subject, html);
 }
 
-module.exports = { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendAppointmentCancelledEmail };
+// Sent by the reminder sweep (see backend/appointmentReminders.js) the day
+// before a confirmed appointment.
+async function sendAppointmentReminderEmail(to, name, appt) {
+  const subject = `Reminder: ${appt.petName}'s appointment is tomorrow`;
+  const html = `
+  <div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background:#faf9fd;">
+    <div style="text-align:center; margin-bottom: 24px;">
+      <img src="cid:vinucare-logo" alt="VinuCare" width="56" height="56" style="border-radius:14px; display:inline-block;" />
+    </div>
+    <h2 style="color:#2b2140; text-align:center; margin-bottom:8px;">See you tomorrow, ${name}!</h2>
+    <p style="color:#5c5470; text-align:center; font-size:14px; line-height:1.6;">
+      Just a reminder — <strong>${appt.petName}</strong> has a <strong>${appt.service}</strong>
+      appointment tomorrow, <strong>${appt.apptDate}</strong> at <strong>${appt.apptTime}</strong>.
+    </p>
+    <p style="color:#c2bdd1; text-align:center; font-size:11px; margin-top:24px;">
+      Need to reschedule? Sign in to VinuCare and update it from your appointments page.
+    </p>
+  </div>`;
+
+  return send(to, subject, html);
+}
+
+module.exports = { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendAppointmentCancelledEmail, sendAppointmentReminderEmail };

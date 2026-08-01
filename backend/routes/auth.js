@@ -80,15 +80,28 @@ async function issueAndSendVerification(user, req) {
   );
 
   const verifyUrl = `${getBackendUrl(req)}/api/auth/verify-email?token=${token}`;
-  await sendVerificationEmail(user.email, user.name, verifyUrl);
+  // The account/token are already saved at this point — a transient SMTP
+  // failure shouldn't fail the whole signup response over an email that
+  // can be resent later (see the "Resend verification email" flow on
+  // Login). Log it instead so it shows up in the admin Error Logs.
+  try {
+    await sendVerificationEmail(user.email, user.name, verifyUrl);
+  } catch (err) {
+    console.error('Failed to send verification email:', err);
+  }
 }
 
 // ── SIGNUP ──────────────────────────────────────────────
+const PHONE_REGEX = /^(?:\+94|0)[1-9]\d{8}$/;
+
 router.post('/signup', authLimiter, async (req, res) => {
   const { name, email, password } = req.body;
+  const phone = req.body.phone?.replace(/[\s-]/g, '');
 
-  if (!name || !email || !password)
+  if (!name || !email || !phone || !password)
     return res.status(400).json({ message: 'All fields are required' });
+  if (!PHONE_REGEX.test(phone))
+    return res.status(400).json({ message: 'Enter a valid Sri Lankan phone number' });
 
   try {
     const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
@@ -97,8 +110,8 @@ router.post('/signup', authLimiter, async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
     const [result] = await db.query(
-      'INSERT INTO users (name, email, password_hash, is_verified) VALUES (?, ?, ?, 0)',
-      [name, email, hashed]
+      'INSERT INTO users (name, email, phone, password_hash, is_verified) VALUES (?, ?, ?, ?, 0)',
+      [name, email, phone, hashed]
     );
 
     await issueAndSendVerification({ id: result.insertId, name, email }, req);
@@ -251,7 +264,14 @@ router.post('/forgot-password', emailActionLimiter, async (req, res) => {
     );
 
     const resetUrl = `${FRONTEND_URL}/reset-password?token=${token}`;
-    await sendPasswordResetEmail(user.email, user.name, resetUrl);
+    // Same reasoning as issueAndSendVerification — don't let an SMTP
+    // hiccup surface as a 500 (which would also leak that the account
+    // exists, undermining the generic-message anti-enumeration guard).
+    try {
+      await sendPasswordResetEmail(user.email, user.name, resetUrl);
+    } catch (err) {
+      console.error('Failed to send password reset email:', err);
+    }
 
     res.json({ message: genericMessage });
   } catch (err) {

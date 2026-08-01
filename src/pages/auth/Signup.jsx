@@ -25,6 +25,7 @@ const EyeOffIcon = () => (
 export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
   const [name, setName]         = useState('');
   const [email, setEmail]       = useState('');
+  const [phone, setPhone]       = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
   const [showPw, setShowPw]     = useState(false);
@@ -39,6 +40,9 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
     if (!name.trim())                      e.name     = 'Full name is required';
     if (!email.trim())                     e.email    = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(email)) e.email    = 'Enter a valid email';
+    if (!phone.trim())                     e.phone    = 'Phone number is required';
+    else if (!/^(?:\+94|0)[1-9]\d{8}$/.test(phone.replace(/[\s-]/g, '')))
+                                            e.phone    = 'Enter a valid Sri Lankan phone number';
     if (!password)                         e.password = 'Password is required';
     else if (password.length < 6)          e.password = 'At least 6 characters';
     if (!confirm)                          e.confirm  = 'Please confirm your password';
@@ -71,7 +75,7 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
       const res  = await fetch(`${API_BASE_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, phone, password }),
       });
       const data = await res.json();
       if (!res.ok) { setApiError(data.message || 'Signup failed'); setLoading(false); return; }
@@ -159,6 +163,18 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
               onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); }}
             />
             {errors.email && <span className="auth-err-msg">{errors.email}</span>}
+          </div>
+
+          <div className="auth-field">
+            <label>Phone Number</label>
+            <input
+              type="tel"
+              className={`auth-input${errors.phone ? ' err' : ''}`}
+              placeholder="+94 77 000 0000"
+              value={phone}
+              onChange={e => { setPhone(e.target.value); setErrors(p => ({ ...p, phone: '' })); }}
+            />
+            {errors.phone && <span className="auth-err-msg">{errors.phone}</span>}
           </div>
 
           <div className="auth-field">
