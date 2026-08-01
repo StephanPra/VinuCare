@@ -8,10 +8,10 @@ import AdminBanners from './AdminBanners';
 import AdminScheduling from './AdminScheduling';
 import AdminAuditLog from './AdminAuditLog';
 import AdminErrorLogs from './AdminErrorLogs';
+import ErrorLogsPanel from './ErrorLogsPanel';
 import AdminHolidays from './AdminHolidays';
 import AdminMessages from './AdminMessages';
 import StaffSettings from '../../components/StaffSettings';
-import NotificationBell from '../../components/admin/NotificationBell';
 import { getAdminSocket } from '../../lib/adminSocket';
 import { ChartIcon, TrendIcon, UserIcon, BoxIcon, CalendarIcon, CardIcon, ImageIcon, ChatIcon, SettingsIcon, AlertIcon } from '../../components/ui/Icons';
 import '../../styles/admin.css';
@@ -118,11 +118,8 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
   return (
     <div id="page-admin">
       <aside className="admin-sidebar">
-        <div className="admin-sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <div className="admin-brand" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img src={vinuLogo} alt="" style={{ width: 22, height: 22, borderRadius: 6, display: 'block' }} /> VinuCare <span className="admin-brand-badge">ADMIN</span>
-          </div>
-          <NotificationBell />
+        <div className="admin-brand">
+          <img src={vinuLogo} alt="" style={{ width: 22, height: 22, borderRadius: 6, display: 'block' }} /> VinuCare <span className="admin-brand-badge">ADMIN</span>
         </div>
         <nav className="admin-nav">
           {NAV_ITEMS.map(item => (
@@ -230,6 +227,8 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
                 </ul>
               )}
             </div>
+
+            <ErrorLogsPanel />
           </>
         )}
 
