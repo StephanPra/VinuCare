@@ -159,6 +159,21 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
           </div>
 
           <div className="auth-field">
+            <label htmlFor="signup-phone">Phone Number</label>
+            <input
+              id="signup-phone"
+              name="phone"
+              type="tel"
+              className={`auth-input${errors.phone ? ' err' : ''}`}
+              placeholder="+94 77 000 0000"
+              autoComplete="tel"
+              value={phone}
+              onChange={e => { setPhone(e.target.value); setErrors(p => ({ ...p, phone: '' })); }}
+            />
+            {errors.phone && <span className="auth-err-msg">{errors.phone}</span>}
+          </div>
+
+          <div className="auth-field">
             <label htmlFor="signup-email">Email address</label>
             <input
               id="signup-email"
@@ -171,21 +186,6 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
               onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); }}
             />
             {errors.email && <span className="auth-err-msg">{errors.email}</span>}
-          </div>
-
-          <div className="auth-field">
-            <label htmlFor="signup-phone">Phone Number</label>
-            <input
-              id="signup-phone"
-              name="phone"
-              type="tel"
-              className={`auth-input${errors.phone ? ' err' : ''}`}
-              placeholder="+94 77 000 0000"
-              autoComplete="off"
-              value={phone}
-              onChange={e => { setPhone(e.target.value); setErrors(p => ({ ...p, phone: '' })); }}
-            />
-            {errors.phone && <span className="auth-err-msg">{errors.phone}</span>}
           </div>
 
           <div className="auth-field">
