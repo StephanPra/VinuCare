@@ -5,59 +5,13 @@ import {
 } from 'recharts';
 import { getAdminSocket } from '../../lib/adminSocket';
 import { API_BASE_URL } from '../../config/api';
+import {
+  STATUS_COLORS, PIE_FALLBACK_COLORS, METHOD_LABELS, money, shortDate,
+  tooltipProps, axisTick, axisLine,
+} from './chartTheme';
+import ChartCard from './ChartCard';
 
 const API_BASE = API_BASE_URL;
-
-const STATUS_COLORS = {
-  Pending: '#B45309',
-  Confirmed: '#3730A3',
-  Completed: '#0F766E',
-  Cancelled: '#B91C1C',
-};
-const PIE_FALLBACK_COLORS = ['#3730A3', '#0F766E', '#B45309', '#B91C1C', '#7C3AED'];
-const METHOD_LABELS = { payhere: 'PayHere', cod: 'Cash on Delivery', unknown: 'Other' };
-
-function money(n) {
-  return 'Rs. ' + Number(n || 0).toLocaleString('en-LK');
-}
-
-function shortDate(iso) {
-  const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('en-LK', { day: 'numeric', month: 'short' });
-}
-
-// Shared look for every chart on this page — glass tooltip card, muted
-// axis text, no tick marks — so Recharts' defaults (black text, hairline
-// axes, plain white tooltip box) don't clash with the frosted admin theme
-// used everywhere else in the dashboard.
-const tooltipProps = {
-  contentStyle: {
-    background: 'var(--admin-card)',
-    backdropFilter: 'blur(16px) saturate(160%)',
-    WebkitBackdropFilter: 'blur(16px) saturate(160%)',
-    border: '1px solid var(--admin-border)',
-    borderRadius: 12,
-    boxShadow: '0 12px 32px rgba(55,48,163,0.16)',
-    fontSize: 13,
-    padding: '10px 14px',
-  },
-  labelStyle: { color: 'var(--admin-muted)', fontWeight: 700, marginBottom: 4 },
-  itemStyle: { color: 'var(--admin-ink)' },
-};
-const axisTick = { fill: 'var(--admin-muted)', fontSize: 12 };
-const axisLine = { stroke: 'var(--admin-border)' };
-
-function ChartCard({ title, dotColor, badge, children }) {
-  return (
-    <div className="admin-panel">
-      <div className="admin-panel-head">
-        <h2><span className="admin-chart-dot" style={{ background: dotColor }} />{title}</h2>
-        {badge}
-      </div>
-      {children}
-    </div>
-  );
-}
 
 export default function AdminAnalytics() {
   const [data, setData] = useState(null);

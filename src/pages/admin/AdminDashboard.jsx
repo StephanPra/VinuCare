@@ -1,4 +1,10 @@
 import { useState, useEffect } from 'react';
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, Cell,
+} from 'recharts';
+import { STATUS_COLORS, PIE_FALLBACK_COLORS, money, shortDate, tooltipProps, axisTick, axisLine } from './chartTheme';
+import ChartCard from './ChartCard';
 import AdminUsers from './AdminUsers';
 import AdminProducts from './AdminProducts';
 import AdminAppointments from './AdminAppointments';
@@ -54,10 +60,6 @@ function describeEvent(event, payload) {
   }
 }
 
-function money(n) {
-  return 'Rs. ' + Number(n).toLocaleString('en-LK');
-}
-
 export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, setUser }) {
   const [tab, setTab] = useState('overview');
   const [summary, setSummary] = useState(null);
@@ -65,6 +67,8 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
   const [error, setError] = useState(null);
   const [liveFeed, setLiveFeed] = useState([]);
   const [lowStockJump, setLowStockJump] = useState(false);
+  const [onlineCount, setOnlineCount] = useState(null);
+  const [overviewCharts, setOverviewCharts] = useState(null);
 
   const loadSummary = () => {
     setLoading(true);
@@ -84,6 +88,16 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
   // matter which tab is currently open.
   useEffect(() => {
     loadSummary();
+  }, [tab]);
+
+  // Charts only matter while Overview is actually visible — analytics has
+  // its own live-updating copy of this same endpoint for the dedicated tab.
+  useEffect(() => {
+    if (tab !== 'overview') return;
+    fetch(`${API_BASE}/api/admin/analytics`, { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`Server responded ${res.status}`))))
+      .then(setOverviewCharts)
+      .catch(() => {}); // Overview quietly shows no charts rather than an extra error banner — the stat cards above already report load failures.
   }, [tab]);
 
   // Live connection lives for the whole dashboard session (not just the
@@ -110,8 +124,13 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
     };
 
     Object.entries(handlers).forEach(([event, fn]) => socket.on(event, fn));
+
+    const handleOnlineCount = (count) => setOnlineCount(count);
+    socket.on('online:count', handleOnlineCount);
+
     return () => {
       Object.entries(handlers).forEach(([event, fn]) => socket.off(event, fn));
+      socket.off('online:count', handleOnlineCount);
     };
   }, []);
 
@@ -157,39 +176,90 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
 
             {!loading && !error && summary && (
               <div className="admin-stat-grid">
-                <div className="admin-stat-card">
+                <div className="admin-stat-card gradient c-indigo">
                   <div className="admin-stat-label">Total Revenue</div>
                   <div className="admin-stat-value">{money(summary.totalRevenue)}</div>
-                  <div className="admin-stat-sub up">From paid transactions</div>
+                  <div className="admin-stat-sub">From paid transactions</div>
                 </div>
-                <div className="admin-stat-card">
+                <div className="admin-stat-card gradient c-gold">
                   <div className="admin-stat-label">Pending Appointments</div>
                   <div className="admin-stat-value">{summary.pendingAppointments}</div>
                   <div className="admin-stat-sub">Awaiting confirmation</div>
                 </div>
-                <div className="admin-stat-card">
+                <div className="admin-stat-card gradient c-teal">
                   <div className="admin-stat-label">Active Doctors</div>
                   <div className="admin-stat-value">{summary.activeDoctors}</div>
                   <div className="admin-stat-sub">Currently on roster</div>
                 </div>
                 <div
-                  className="admin-stat-card"
+                  className="admin-stat-card gradient c-rose"
                   style={{ cursor: 'pointer' }}
                   onClick={() => { setLowStockJump(true); setTab('products'); }}
                 >
                   <div className="admin-stat-label">Low Stock Items</div>
                   <div className="admin-stat-value">{summary.lowStockProducts}</div>
-                  <div className="admin-stat-sub down">10 units or fewer — click to restock</div>
+                  <div className="admin-stat-sub">10 units or fewer — click to restock</div>
                 </div>
                 <div
-                  className="admin-stat-card"
+                  className="admin-stat-card gradient c-purple"
                   style={{ cursor: 'pointer' }}
                   onClick={() => { setLowStockJump(false); setTab('messages'); }}
                 >
                   <div className="admin-stat-label">Unread Messages</div>
                   <div className="admin-stat-value">{summary.unreadMessages}</div>
-                  <div className={`admin-stat-sub ${summary.unreadMessages > 0 ? 'down' : ''}`}>From doctors & nurses</div>
+                  <div className="admin-stat-sub">From doctors & nurses</div>
                 </div>
+                <div className="admin-stat-card gradient c-cyan">
+                  <div className="admin-stat-label">Users Online Now</div>
+                  <div className="admin-stat-value">{onlineCount === null ? '—' : onlineCount}</div>
+                  <div className="admin-stat-sub"><span className="admin-stat-live-dot" /> Live right now</div>
+                </div>
+              </div>
+            )}
+
+            {overviewCharts && (
+              <div className="admin-analytics-grid" style={{ marginBottom: 30 }}>
+                <ChartCard title="Revenue — last 14 days" dotColor="var(--admin-indigo)">
+                  {overviewCharts.revenueByDay.every((d) => d.revenue === 0) ? (
+                    <div className="admin-empty">No paid transactions in the last 14 days.</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <AreaChart data={overviewCharts.revenueByDay}>
+                        <defs>
+                          <linearGradient id="overviewRevenueFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="var(--admin-indigo)" stopOpacity={0.32} />
+                            <stop offset="100%" stopColor="var(--admin-indigo)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--admin-border)" />
+                        <XAxis dataKey="date" tickFormatter={shortDate} tick={axisTick} axisLine={axisLine} tickLine={false} />
+                        <YAxis tick={axisTick} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
+                        <Tooltip {...tooltipProps} formatter={(v) => money(v)} labelFormatter={shortDate} cursor={{ stroke: 'var(--admin-indigo)', strokeDasharray: '4 4' }} />
+                        <Area type="monotone" dataKey="revenue" stroke="var(--admin-indigo)" strokeWidth={2.5} fill="url(#overviewRevenueFill)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </ChartCard>
+
+                <ChartCard title="Appointments by status" dotColor="var(--admin-gold)">
+                  {overviewCharts.appointmentsByStatus.length === 0 ? (
+                    <div className="admin-empty">No appointments yet.</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={overviewCharts.appointmentsByStatus}>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--admin-border)" />
+                        <XAxis dataKey="status" tick={axisTick} axisLine={axisLine} tickLine={false} />
+                        <YAxis tick={axisTick} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <Tooltip {...tooltipProps} cursor={{ fill: 'rgba(180,83,9,0.08)' }} />
+                        <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={48}>
+                          {overviewCharts.appointmentsByStatus.map((entry, i) => (
+                            <Cell key={entry.status} fill={STATUS_COLORS[entry.status] || PIE_FALLBACK_COLORS[i % PIE_FALLBACK_COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </ChartCard>
               </div>
             )}
 

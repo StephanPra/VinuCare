@@ -12,6 +12,20 @@ const bootId = require('./bootId');
 
 let io = null;
 
+// Every connected socket counts as one "online" visitor — the public site
+// opens one of these per tab (see src/lib/visitorPresence.js) purely for
+// this presence count, and the admin/doctor/nurse dashboards already open
+// one each for their own live-update features, so staff with a dashboard
+// open are counted too. This is a count of open connections, not unique
+// people — two tabs from the same visitor count as two, which is fine for
+// an "activity right now" number.
+const onlineSockets = new Set();
+
+function broadcastOnlineCount() {
+  if (!io) return;
+  io.to('admin').emit('online:count', onlineSockets.size);
+}
+
 // The auth cookie is httpOnly (frontend JS can't read it to send as a
 // socket payload), but the browser still sends it automatically on the
 // socket.io handshake request — same as any other credentialed request —
@@ -42,13 +56,21 @@ function initSocket(httpServer) {
   });
 
   io.on('connection', (socket) => {
+    onlineSockets.add(socket.id);
+    broadcastOnlineCount();
+
     const user = getUserFromHandshake(socket);
 
     // The admin dashboard joins this room on mount so it only receives
     // events relevant to it (not every connected browser tab). Verified
     // against the real session now instead of trusting any caller.
     socket.on('join:admin', () => {
-      if (user?.role === 'Admin') socket.join('admin');
+      if (user?.role === 'Admin') {
+        socket.join('admin');
+        // Send the current count immediately — otherwise the dashboard
+        // shows nothing until the next connect/disconnect elsewhere.
+        socket.emit('online:count', onlineSockets.size);
+      }
     });
 
     // A Doctor/Nurse's own dashboard joins their personal room so a
@@ -59,8 +81,10 @@ function initSocket(httpServer) {
     });
 
     socket.on('disconnect', () => {
-      // Nothing to clean up — Socket.IO removes the socket from all
-      // rooms automatically.
+      // Socket.IO removes the socket from all rooms automatically — the
+      // one thing that does need manual cleanup is our own presence set.
+      onlineSockets.delete(socket.id);
+      broadcastOnlineCount();
     });
   });
 

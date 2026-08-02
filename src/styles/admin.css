@@ -12,8 +12,18 @@
   --admin-indigo: #3730A3;
   --admin-indigo-dark: #262168;
   --admin-teal: #0F766E;
+  --admin-teal-dark: #0B5C56;
   --admin-gold: #B45309;
+  --admin-gold-dark: #8A3F07;
   --admin-rose: #B91C1C;
+  --admin-rose-dark: #8C1616;
+  /* Two more additions to the same fixed (non-theme-flipping) brand
+     family as indigo/teal/gold/rose above, for the two Overview stat
+     cards that don't map to one of the existing four. */
+  --admin-purple: #6D28D9;
+  --admin-purple-dark: #4C1D95;
+  --admin-cyan: #0E7490;
+  --admin-cyan-dark: #164E63;
   --admin-bg: #F6F5FB;
   --admin-card: rgba(255, 255, 255, 0.72);
   --admin-border: rgba(55, 48, 163, 0.12);
@@ -191,6 +201,41 @@ html[data-theme="dark"] .admin-modal {
 .admin-stat-sub { font-size: .78rem; margin-top: 4px; font-weight: 600; }
 .admin-stat-sub.up { color: var(--admin-teal); }
 .admin-stat-sub.down { color: var(--admin-rose); }
+
+/* Overview-only: solid gradient variant for the top stat row, instead of
+   the glass look every other stat card on the dashboard uses — the
+   Overview tab is the "at a glance" landing page, so it gets to be the
+   colorful one. */
+.admin-stat-card.gradient {
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 10px 24px -8px var(--stat-glow, rgba(0,0,0,.3));
+}
+.admin-stat-card.gradient .admin-stat-label { color: rgba(255,255,255,.82); }
+.admin-stat-card.gradient .admin-stat-value { color: #fff; }
+.admin-stat-card.gradient .admin-stat-sub,
+.admin-stat-card.gradient .admin-stat-sub.up,
+.admin-stat-card.gradient .admin-stat-sub.down { color: rgba(255,255,255,.85); }
+
+/* Same 160deg dark-to-base direction/stop as .admin-sidebar's gradient,
+   so these read as the same brand family instead of a new color language
+   bolted onto the Overview tab specifically. */
+.admin-stat-card.gradient.c-indigo { background: linear-gradient(160deg, var(--admin-indigo-dark), var(--admin-indigo) 70%); --stat-glow: rgba(55,48,163,.35); }
+.admin-stat-card.gradient.c-rose   { background: linear-gradient(160deg, var(--admin-rose-dark), var(--admin-rose) 70%); --stat-glow: rgba(185,28,28,.35); }
+.admin-stat-card.gradient.c-teal   { background: linear-gradient(160deg, var(--admin-teal-dark), var(--admin-teal) 70%); --stat-glow: rgba(15,118,110,.35); }
+.admin-stat-card.gradient.c-gold   { background: linear-gradient(160deg, var(--admin-gold-dark), var(--admin-gold) 70%); --stat-glow: rgba(180,83,9,.35); }
+.admin-stat-card.gradient.c-purple { background: linear-gradient(160deg, var(--admin-purple-dark), var(--admin-purple) 70%); --stat-glow: rgba(109,40,217,.35); }
+.admin-stat-card.gradient.c-cyan   { background: linear-gradient(160deg, var(--admin-cyan-dark), var(--admin-cyan) 70%); --stat-glow: rgba(14,116,144,.35); }
+
+/* Steady white pulse for the "Users Online" gradient card — the teal
+   .admin-live-dot/-indicator pair reads fine on a light glass card but
+   disappears against a saturated gradient background. */
+.admin-stat-live-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.35);
+  margin-left: 2px;
+}
 
 /* ---------- Panel / card shell ---------- */
 .admin-panel {

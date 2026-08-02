@@ -28,6 +28,7 @@ import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import ChatBot from './components/ChatBot';
 import { notifyAuthChanged } from './lib/authEvents';
 import { deriveUserAccess } from './lib/deriveUserAccess';
+import { startVisitorPresence } from './lib/visitorPresence';
 
 
 const VALID_PAGES = ['home', 'services', 'appointments', 'shop', 'cart', 'reviews', 'team', 'login', 'signup', 'verify-email', 'forgot-password', 'reset-password', 'payment-return', 'payment-cancel', 'profile', 'admin', 'nurse', 'doctor'];
@@ -225,6 +226,10 @@ const [redirectAfterLogin, setRedirectAfterLogin] = useState('home');
   // isNurse are computed once at login and cached in localStorage, so
   // the change silently "didn't work" until they fully logged out and
   // back in. Now any page load/refresh picks up the current role too.
+  useEffect(() => {
+    startVisitorPresence();
+  }, []);
+
   useEffect(() => {
     if (!localStorage.getItem('user')) return;
     fetch(`${API_BASE_URL}/api/auth/me`, { credentials: 'include' })
