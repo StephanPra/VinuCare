@@ -141,12 +141,17 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
 
           {apiError && <div className="auth-api-error">{apiError}</div>}
 
+          <form onSubmit={e => { e.preventDefault(); submit(); }}>
+
           <div className="auth-field">
-            <label>Full Name</label>
+            <label htmlFor="signup-name">Full Name</label>
             <input
+              id="signup-name"
+              name="name"
               type="text"
               className={`auth-input${errors.name ? ' err' : ''}`}
               placeholder="Sarah Johnson"
+              autoComplete="name"
               value={name}
               onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: '' })); }}
             />
@@ -154,11 +159,14 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
           </div>
 
           <div className="auth-field">
-            <label>Email address</label>
+            <label htmlFor="signup-email">Email address</label>
             <input
+              id="signup-email"
+              name="email"
               type="email"
               className={`auth-input${errors.email ? ' err' : ''}`}
               placeholder="you@example.com"
+              autoComplete="username"
               value={email}
               onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); }}
             />
@@ -166,11 +174,14 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
           </div>
 
           <div className="auth-field">
-            <label>Phone Number</label>
+            <label htmlFor="signup-phone">Phone Number</label>
             <input
+              id="signup-phone"
+              name="phone"
               type="tel"
               className={`auth-input${errors.phone ? ' err' : ''}`}
               placeholder="+94 77 000 0000"
+              autoComplete="off"
               value={phone}
               onChange={e => { setPhone(e.target.value); setErrors(p => ({ ...p, phone: '' })); }}
             />
@@ -178,12 +189,15 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
           </div>
 
           <div className="auth-field">
-            <label>Password</label>
+            <label htmlFor="signup-password">Password</label>
             <div className="auth-pw-wrap">
               <input
+                id="signup-password"
+                name="new-password"
                 type={showPw ? 'text' : 'password'}
                 className={`auth-input${errors.password ? ' err' : ''}`}
                 placeholder="Min. 6 characters"
+                autoComplete="new-password"
                 value={password}
                 onChange={e => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '' })); }}
               />
@@ -211,12 +225,15 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
           </div>
 
           <div className="auth-field">
-            <label>Confirm Password</label>
+            <label htmlFor="signup-confirm">Confirm Password</label>
             <div className="auth-pw-wrap">
               <input
+                id="signup-confirm"
+                name="confirm-password"
                 type={showCf ? 'text' : 'password'}
                 className={`auth-input${errors.confirm ? ' err' : ''}`}
                 placeholder="Repeat your password"
+                autoComplete="new-password"
                 value={confirm}
                 onChange={e => { setConfirm(e.target.value); setErrors(p => ({ ...p, confirm: '' })); }}
               />
@@ -237,10 +254,12 @@ export default function Signup({ onNavigate, setUser, redirectAfterLogin }) {
             <span style={{ color: '#7C5CE8', cursor: 'pointer' }}>Privacy Policy</span>.
           </p>
 
-          <button className="auth-btn-primary" onClick={submit} disabled={loading}>
+          <button className="auth-btn-primary" type="submit" disabled={loading}>
             {loading ? <span className="auth-spinner" /> : null}
             {loading ? 'Creating account…' : 'Create Account'}
           </button>
+
+          </form>
 
           <p className="auth-switch">
             Already have an account?{' '}
