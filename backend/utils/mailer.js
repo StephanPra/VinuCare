@@ -1,55 +1,59 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+const fs = require('fs');
 const path = require('path');
 
-const LOGO_PATH = path.resolve(__dirname, '../../src/assets/logo/vinucare-logo.png');
-
-let transporter = null;
-
-function getTransporter() {
-  if (transporter) return transporter;
-
-  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    return null;
-  }
-
-  transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: Number(process.env.EMAIL_PORT) === 465,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  return transporter;
+// Lives inside backend/ (not the frontend's src/) so this module works
+// standalone in production, where Railway's "root directory: backend"
+// build only packages this folder — a sibling ../../src is never present
+// in the deployed container.
+const LOGO_PATH = path.resolve(__dirname, '../assets/vinucare-logo.png');
+let LOGO_BUFFER = null;
+try {
+  LOGO_BUFFER = fs.readFileSync(LOGO_PATH);
+} catch (err) {
+  console.error('Mailer: could not load logo attachment, sending emails without it:', err.message);
 }
 
-async function send(to, subject, html) {
-  const from = process.env.EMAIL_FROM || `VinuCare <no-reply@vinucare.com>`;
-  const t = getTransporter();
+// Sends over Resend's HTTPS API rather than raw SMTP — Railway (like most
+// PaaS hosts) blocks outbound SMTP connections platform-wide as an
+// anti-spam measure, so a direct nodemailer/Gmail transport just hangs
+// until ETIMEDOUT there even though it works fine from a home network.
+let resend = null;
+function getClient() {
+  if (resend) return resend;
+  if (!process.env.RESEND_API_KEY) return null;
+  resend = new Resend(process.env.RESEND_API_KEY);
+  return resend;
+}
 
-  if (!t) {
-    console.log('\n──────────── EMAIL (SMTP not configured) ────────────');
+// No verified domain on the Resend account (this is a uni project with no
+// real domain), so sending is restricted to onboarding@resend.dev as the
+// sender and — until a domain is verified — only actually delivers to the
+// email address the Resend account itself is registered under.
+const FROM = 'VinuCare <onboarding@resend.dev>';
+
+async function send(to, subject, html) {
+  const client = getClient();
+
+  if (!client) {
+    console.log('\n──────────── EMAIL (RESEND_API_KEY not configured) ────────────');
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
-    console.log('───────────────────────────────────────────────────\n');
+    console.log('─────────────────────────────────────────────────────────────\n');
     return { simulated: true };
   }
 
-  return t.sendMail({
-    from,
+  const { data, error } = await client.emails.send({
+    from: FROM,
     to,
     subject,
     html,
-    attachments: [
-      // contentDisposition: 'inline' is what keeps this purely embedded
-      // in the HTML body — without it, Gmail (and other clients) also
-      // lists it as a separate downloadable attachment chip, with its
-      // own generic "preview unavailable" icon in the inbox row.
-      { filename: 'vinucare-logo.png', path: LOGO_PATH, cid: 'vinucare-logo', contentDisposition: 'inline' },
-    ],
+    attachments: LOGO_BUFFER
+      ? [{ filename: 'vinucare-logo.png', content: LOGO_BUFFER, content_id: 'vinucare-logo' }]
+      : [],
   });
+  if (error) throw new Error(error.message || 'Resend API error');
+  return data;
 }
 
 async function sendVerificationEmail(to, name, verifyUrl) {
