@@ -43,8 +43,10 @@ const ORDER = [
   'add_product_brand.sql',
   'add_error_logs_table.sql',
   'add_staff_messages_table.sql',
+  'add_message_edited_at.sql',
   'add_user_avatar.sql',
   'chatbot_unanswered.sql',
+  'fix_banner_prices_to_lkr.sql',
 ];
 
 // MySQL error codes that mean "this exact change is already applied" —

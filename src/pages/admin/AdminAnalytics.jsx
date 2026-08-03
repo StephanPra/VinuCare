@@ -10,6 +10,8 @@ import {
   tooltipProps, axisTick, axisLine,
 } from './chartTheme';
 import ChartCard from './ChartCard';
+import ChartCardSkeleton from './ChartCardSkeleton';
+import SkeletonStatGrid from '../../components/ui/SkeletonStatGrid';
 
 const API_BASE = API_BASE_URL;
 
@@ -69,7 +71,15 @@ export default function AdminAnalytics() {
         </div>
       </div>
 
-      {loading && <div className="admin-empty">Loading analytics…</div>}
+      {loading && (
+        <>
+          <SkeletonStatGrid count={4} />
+          <ChartCardSkeleton height={260} />
+          <div className="admin-analytics-grid">
+            {Array.from({ length: 5 }).map((_, i) => <ChartCardSkeleton key={i} />)}
+          </div>
+        </>
+      )}
       {error && <div className="admin-empty" style={{ color: 'var(--admin-rose-text)' }}>Failed to load analytics: {error}</div>}
 
       {!loading && !error && data && (() => {

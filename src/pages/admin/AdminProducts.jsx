@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
 import { ShopContext } from '../shop/ShopContext';
+import SkeletonTableRows from '../../components/ui/SkeletonTableRows';
 
 const API_BASE = `${API_BASE_URL}/api/admin/products`;
 
@@ -203,10 +204,9 @@ export default function AdminProducts({ initialLowStockOnly = false }) {
           </div>
         </div>
 
-        {loading && <div className="admin-empty">Loading products…</div>}
         {error && <div className="admin-error" style={{ color: 'red', padding: '12px' }}>{error}</div>}
 
-        {!loading && !error && (
+        {!error && (
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -219,6 +219,7 @@ export default function AdminProducts({ initialLowStockOnly = false }) {
                   <th></th>
                 </tr>
               </thead>
+              {loading ? <SkeletonTableRows columns={6} /> : (
               <tbody>
                 {filtered.map(p => (
                   <tr key={p.id}>
@@ -245,8 +246,9 @@ export default function AdminProducts({ initialLowStockOnly = false }) {
                   </tr>
                 ))}
               </tbody>
+              )}
             </table>
-            {filtered.length === 0 && <div className="admin-empty">No products match that search.</div>}
+            {!loading && filtered.length === 0 && <div className="admin-empty">No products match that search.</div>}
           </div>
         )}
       </div>

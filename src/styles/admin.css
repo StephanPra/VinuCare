@@ -672,6 +672,36 @@ html[data-theme="dark"] .admin-field input:-webkit-autofill:active {
 }
 .dm-bubble-sender { font-size: .74rem; font-weight: 700; opacity: .75; margin-bottom: 3px; }
 .dm-bubble-time { font-size: .7rem; opacity: .6; margin-top: 4px; }
+.dm-bubble { position: relative; }
+.dm-bubble-actions {
+  display: flex; gap: 4px;
+  position: absolute; top: -12px; right: 8px;
+  opacity: 0; transition: opacity .12s ease;
+}
+.dm-bubble:hover .dm-bubble-actions { opacity: 1; }
+.dm-bubble-action {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--admin-card); border: 1px solid var(--admin-border);
+  color: var(--admin-muted); cursor: pointer; padding: 0;
+}
+.dm-bubble-action:hover { color: var(--admin-ink); border-color: var(--lavender-400); }
+.dm-edit-form { display: flex; flex-direction: column; gap: 6px; }
+.dm-edit-input {
+  border: 1px solid rgba(255,255,255,0.4); border-radius: 8px;
+  padding: 6px 9px; font-size: .87rem; font-family: inherit;
+  background: rgba(255,255,255,0.15); color: inherit;
+}
+.dm-bubble-theirs .dm-edit-input { border-color: var(--admin-border); background: rgba(var(--glass-rgb), 0.6); color: var(--admin-ink); }
+.dm-edit-input:focus { outline: none; }
+.dm-edit-actions { display: flex; gap: 6px; }
+.dm-edit-actions button {
+  border: none; border-radius: 6px; padding: 4px 10px;
+  font-size: .74rem; font-weight: 700; cursor: pointer;
+}
+.dm-edit-actions button:first-child { background: #fff; color: var(--lavender-700); }
+.dm-edit-actions button:last-child { background: rgba(0,0,0,0.15); color: inherit; }
+.dm-edit-actions button:disabled { opacity: .5; cursor: not-allowed; }
 .dm-input-row {
   display: flex;
   gap: 8px;

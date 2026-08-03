@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAdminSocket } from '../../lib/adminSocket';
 import { API_BASE_URL } from '../../config/api';
+import SkeletonList from '../../components/ui/SkeletonList';
 
 const API_BASE = `${API_BASE_URL}/api/admin/error-logs`;
 
@@ -37,7 +38,7 @@ export default function ErrorLogsPanel() {
         <h2>System Errors</h2>
       </div>
       {loading ? (
-        <p style={{ color: 'var(--admin-muted)' }}>Loading…</p>
+        <SkeletonList rows={4} />
       ) : errors.length === 0 ? (
         <p style={{ color: 'var(--admin-muted)' }}>No errors — all clear.</p>
       ) : (

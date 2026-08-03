@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
+import SkeletonTableRows from '../../components/ui/SkeletonTableRows';
 
 const API_BASE = `${API_BASE_URL}/api/admin/holidays`;
 const EMPTY_FORM = { date: '', name: '' };
@@ -88,10 +89,9 @@ export default function AdminHolidays() {
       </div>
 
       <div className="admin-panel">
-        {loading && <div className="admin-empty">Loading holidays…</div>}
         {error && <div className="admin-error" style={{ color: 'red', padding: '12px' }}>{error}</div>}
 
-        {!loading && !error && (
+        {!error && (
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -101,6 +101,7 @@ export default function AdminHolidays() {
                   <th></th>
                 </tr>
               </thead>
+              {loading ? <SkeletonTableRows columns={3} /> : (
               <tbody>
                 {holidays.map(h => (
                   <tr key={h.id}>
@@ -114,8 +115,9 @@ export default function AdminHolidays() {
                   </tr>
                 ))}
               </tbody>
+              )}
             </table>
-            {holidays.length === 0 && <div className="admin-empty">No holidays added yet.</div>}
+            {!loading && holidays.length === 0 && <div className="admin-empty">No holidays added yet.</div>}
           </div>
         )}
       </div>

@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { API_BASE_URL } from '../config/api';
 import { ImageIcon, SunIcon, MoonIcon } from './ui/Icons';
 import Avatar from './ui/Avatar';
+import Skeleton from './ui/Skeleton';
 import { AVATAR_PRESETS, AVATAR_PRESET_PREFIX } from '../lib/avatarPresets';
 import '../styles/profile.css';
 
@@ -174,7 +175,22 @@ export default function StaffSettings({ setUser }) {
         </div>
       </div>
 
-      {loading && <div className="admin-panel"><div className="admin-empty">Loading…</div></div>}
+      {loading && (
+        <>
+          <div className="admin-panel">
+            <div className="admin-panel-head"><h2>Account</h2></div>
+            <Skeleton circle width="58px" height="58px" style={{ marginBottom: 18 }} />
+            <div className="admin-field-row">
+              <div className="admin-field"><Skeleton width="30%" height="0.75rem" style={{ marginBottom: 8 }} /><Skeleton width="100%" height="38px" radius="8px" /></div>
+              <div className="admin-field"><Skeleton width="30%" height="0.75rem" style={{ marginBottom: 8 }} /><Skeleton width="100%" height="38px" radius="8px" /></div>
+            </div>
+          </div>
+          <div className="admin-panel">
+            <div className="admin-panel-head"><h2>Password</h2></div>
+            <Skeleton width="140px" height="38px" radius="8px" />
+          </div>
+        </>
+      )}
 
       {!loading && profile && (
         <>

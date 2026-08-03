@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../../config/api';
+import SkeletonTableRows from '../../components/ui/SkeletonTableRows';
 
 const API_BASE = `${API_BASE_URL}/api/admin/audit-log`;
 
@@ -53,10 +54,9 @@ export default function AdminAuditLog() {
           />
         </div>
 
-        {loading && <div className="admin-empty">Loading audit log…</div>}
         {error && <div className="admin-error" style={{ color: 'red', padding: '12px' }}>{error}</div>}
 
-        {!loading && !error && (
+        {!error && (
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -68,6 +68,7 @@ export default function AdminAuditLog() {
                   <th>Details</th>
                 </tr>
               </thead>
+              {loading ? <SkeletonTableRows columns={5} /> : (
               <tbody>
                 {filtered.map(e => (
                   <tr key={e.id}>
@@ -82,8 +83,9 @@ export default function AdminAuditLog() {
                   </tr>
                 ))}
               </tbody>
+              )}
             </table>
-            {filtered.length === 0 && <div className="admin-empty">No matching audit entries.</div>}
+            {!loading && filtered.length === 0 && <div className="admin-empty">No matching audit entries.</div>}
           </div>
         )}
       </div>

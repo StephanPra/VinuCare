@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
+import SkeletonTableRows from '../../components/ui/SkeletonTableRows';
 
 const ROLES = ['Admin', 'Doctor', 'Nurse', 'Customer'];
 const API_BASE = `${API_BASE_URL}/api/admin/users`;
@@ -185,10 +186,9 @@ export default function AdminUsers() {
           </div>
         </div>
 
-        {loading && <div className="admin-empty">Loading users…</div>}
         {error && <div className="admin-error" style={{ color: 'red', padding: '12px' }}>{error}</div>}
 
-        {!loading && !error && (
+        {!error && (
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -202,6 +202,7 @@ export default function AdminUsers() {
                   <th></th>
                 </tr>
               </thead>
+              {loading ? <SkeletonTableRows columns={7} /> : (
               <tbody>
                 {filtered.map(u => (
                   <tr key={u.id}>
@@ -226,8 +227,9 @@ export default function AdminUsers() {
                   </tr>
                 ))}
               </tbody>
+              )}
             </table>
-            {filtered.length === 0 && <div className="admin-empty">No users match that search.</div>}
+            {!loading && filtered.length === 0 && <div className="admin-empty">No users match that search.</div>}
           </div>
         )}
       </div>

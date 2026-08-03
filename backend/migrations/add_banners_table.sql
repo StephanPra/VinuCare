@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS banners (
 -- stay NULL here -- the frontend falls back to its bundled default photo
 -- whenever a row's image is empty, so nothing breaks in the meantime.
 INSERT IGNORE INTO banners (banner_key, page, tag, title, description, price, original_price, cta_text) VALUES
-('home_offer_1', 'home', 'New Patients', 'First Wellness Exam, On Us', 'Complete health check, vaccination review and microchipping for new patients.', '$29', '$75', 'Book Now'),
-('home_offer_2', 'home', 'Bundle Deal', 'Grooming + Dental, Bundled', 'Full grooming session combined with professional dental scaling for a healthy, fresh pup.', '$65', '$110', 'Book Now'),
-('home_offer_3', 'home', 'Monthly Special', '5 Nights of Boarding Bliss', '5 nights of supervised boarding with daily enrichment activities and bedtime story updates.', '$149', '$220', 'Reserve a Spot'),
+('home_offer_1', 'home', 'New Patients', 'First Wellness Exam, On Us', 'Complete health check, vaccination review and microchipping for new patients.', 'Rs 2,900', 'Rs 7,500', 'Book Now'),
+('home_offer_2', 'home', 'Bundle Deal', 'Grooming + Dental, Bundled', 'Full grooming session combined with professional dental scaling for a healthy, fresh pup.', 'Rs 6,500', 'Rs 11,000', 'Book Now'),
+('home_offer_3', 'home', 'Monthly Special', '5 Nights of Boarding Bliss', '5 nights of supervised boarding with daily enrichment activities and bedtime story updates.', 'Rs 14,900', 'Rs 22,000', 'Reserve a Spot'),
 ('services_hero', 'services', 'All Services', 'Comprehensive Pet Care Services', 'From routine wellness to specialist procedures -- we''re your one-stop pet health destination.', NULL, NULL, NULL);

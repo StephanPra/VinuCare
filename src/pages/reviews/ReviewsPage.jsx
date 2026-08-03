@@ -4,6 +4,7 @@ import ReviewHero from "./ReviewHero";
 import RatingsSummary from "./RatingsSummary";
 import WriteReview from "./WriteReview";
 import ReviewsGrid from "./ReviewsGrid";
+import ReviewCardSkeleton from "./ReviewCardSkeleton";
 import "../../styles/reviews.css";
 import { API_BASE_URL } from "../../config/api";
 
@@ -34,7 +35,9 @@ function ReviewsPage({ onNavigate, isLoggedIn, setRedirectAfterLogin }) {
         setRedirectAfterLogin={setRedirectAfterLogin}
       />
       {loading ? (
-        <p style={{ textAlign: 'center', padding: '40px', color: '#888' }}>Loading reviews…</p>
+        <div className="reviews-full-grid">
+          {Array.from({ length: 6 }).map((_, i) => <ReviewCardSkeleton key={i} />)}
+        </div>
       ) : allReviews.length === 0 ? (
         <p style={{ textAlign: 'center', padding: '40px', color: '#888' }}>No reviews yet. Be the first!</p>
       ) : (

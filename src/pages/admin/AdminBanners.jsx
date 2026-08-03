@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
+import SkeletonTableRows from '../../components/ui/SkeletonTableRows';
 import bannerNewpatient from '../../assets/images/banner-newpatient.jpg';
 import bannerGrooming from '../../assets/images/banner-grooming.webp';
 import bannerBoarding from '../../assets/images/banner-boarding.jpg';
@@ -210,10 +211,9 @@ export default function AdminBanners() {
         </div>
       </div>
 
-      {loading && <div className="admin-panel"><div className="admin-empty">Loading banners…</div></div>}
       {error && <div className="admin-panel"><div className="admin-error" style={{ color: 'red', padding: '12px' }}>{error}</div></div>}
 
-      {!loading && !error && grouped.map(g => (
+      {!error && grouped.map(g => (
         <div className="admin-panel" key={g.page} style={{ marginBottom: 24 }}>
           <div className="admin-panel-head">
             <h3 style={{ margin: 0 }}>{g.label}</h3>
@@ -228,6 +228,7 @@ export default function AdminBanners() {
                   <th></th>
                 </tr>
               </thead>
+              {loading ? <SkeletonTableRows columns={4} rows={2} /> : (
               <tbody>
                 {g.hero && (
                   <tr>
@@ -267,12 +268,15 @@ export default function AdminBanners() {
                   </tr>
                 ))}
               </tbody>
+              )}
             </table>
-            <div style={{ padding: '14px 18px' }}>
-              <button className="admin-btn admin-btn-outline admin-btn-sm" onClick={() => openAdd(g.page)}>
-                + Add Promo Banner Section
-              </button>
-            </div>
+            {!loading && (
+              <div style={{ padding: '14px 18px' }}>
+                <button className="admin-btn admin-btn-outline admin-btn-sm" onClick={() => openAdd(g.page)}>
+                  + Add Promo Banner Section
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ))}

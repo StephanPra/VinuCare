@@ -555,8 +555,29 @@ export function SendIcon(props) {
 export function SettingsIcon(props) {
   return (
     <Base {...props}>
+      <path d="M9.3 3.4h3.4l.5 2.2a6.6 6.6 0 0 1 1.8 1l2.1-.8 1.7 3-1.7 1.4a6.6 6.6 0 0 1 0 2l1.7 1.4-1.7 3-2.1-.8a6.6 6.6 0 0 1-1.8 1l-.5 2.2H9.3l-.5-2.2a6.6 6.6 0 0 1-1.8-1l-2.1.8-1.7-3 1.7-1.4a6.6 6.6 0 0 1 0-2L3.2 8.8l1.7-3 2.1.8a6.6 6.6 0 0 1 1.8-1z" />
       <circle cx="11" cy="11" r="2.6" />
-      <path d="M11 3.2v2.1M11 15.7v2.1M18.8 11h-2.1M5.3 11H3.2M16.4 5.6l-1.5 1.5M7.1 14.9l-1.5 1.5M16.4 16.4l-1.5-1.5M7.1 7.1 5.6 5.6" />
+    </Base>
+  );
+}
+
+export function EditIcon(props) {
+  return (
+    <Base {...props}>
+      <path d="M14 3.8 18.2 8 8 18.2H3.8V14z" />
+      <line x1="12.3" y1="5.5" x2="16.5" y2="9.7" />
+    </Base>
+  );
+}
+
+export function TrashIcon(props) {
+  return (
+    <Base {...props}>
+      <path d="M4.5 6.5h13" />
+      <path d="M8.5 6.5V4.3a1.2 1.2 0 0 1 1.2-1.2h2.6a1.2 1.2 0 0 1 1.2 1.2v2.2" />
+      <path d="M6 6.5 6.9 18a1.5 1.5 0 0 0 1.5 1.4h5.2a1.5 1.5 0 0 0 1.5-1.4l.9-11.5" />
+      <line x1="9.3" y1="9.8" x2="9.3" y2="15.5" />
+      <line x1="12.7" y1="9.8" x2="12.7" y2="15.5" />
     </Base>
   );
 }

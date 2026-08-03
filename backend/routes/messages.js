@@ -11,7 +11,7 @@ router.get('/mine', auth, requireRole('Doctor', 'Nurse'), async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT id, sender_id AS senderId, sender_name AS senderName, sender_role AS senderRole,
-              body, created_at AS createdAt
+              body, created_at AS createdAt, edited_at AS editedAt
        FROM messages WHERE staff_id = ? ORDER BY created_at ASC`,
       [req.user.id]
     );
@@ -78,7 +78,7 @@ router.get('/admin/threads/:staffId', auth, requireRole('Admin'), async (req, re
   try {
     const [rows] = await db.query(
       `SELECT id, sender_id AS senderId, sender_name AS senderName, sender_role AS senderRole,
-              body, created_at AS createdAt
+              body, created_at AS createdAt, edited_at AS editedAt
        FROM messages WHERE staff_id = ? ORDER BY created_at ASC`,
       [req.params.staffId]
     );
@@ -116,6 +116,55 @@ router.post('/admin/threads/:staffId', auth, requireRole('Admin'), async (req, r
   } catch (err) {
     console.error('Send admin reply error:', err);
     res.status(500).json({ message: 'Failed to send message' });
+  }
+});
+
+// Edit or delete your own DM — either side of a thread (the staff member
+// or Admin) may only touch messages they themselves sent, so ownership is
+// checked against sender_id rather than the caller's role.
+router.patch('/:id', auth, requireRole('Admin', 'Doctor', 'Nurse'), async (req, res) => {
+  const { body } = req.body;
+  if (!body || !body.trim()) return res.status(400).json({ message: 'Message body is required' });
+  try {
+    const [[message]] = await db.query(
+      `SELECT id, staff_id AS staffId, sender_id AS senderId, sender_role AS senderRole FROM messages WHERE id = ?`,
+      [req.params.id]
+    );
+    if (!message) return res.status(404).json({ message: 'Message not found' });
+    if (message.senderId !== req.user.id) return res.status(403).json({ message: 'You can only edit your own messages' });
+
+    await db.query(`UPDATE messages SET body = ?, edited_at = NOW() WHERE id = ?`, [body.trim(), req.params.id]);
+
+    const payload = { id: message.id, staffId: message.staffId, body: body.trim(), editedAt: new Date() };
+    if (message.senderRole === 'Admin') emitToUser(message.staffId, 'message:edited', payload);
+    else emitToAdmin('message:edited', payload);
+
+    res.json(payload);
+  } catch (err) {
+    console.error('Edit message error:', err);
+    res.status(500).json({ message: 'Failed to edit message' });
+  }
+});
+
+router.delete('/:id', auth, requireRole('Admin', 'Doctor', 'Nurse'), async (req, res) => {
+  try {
+    const [[message]] = await db.query(
+      `SELECT id, staff_id AS staffId, sender_id AS senderId, sender_role AS senderRole FROM messages WHERE id = ?`,
+      [req.params.id]
+    );
+    if (!message) return res.status(404).json({ message: 'Message not found' });
+    if (message.senderId !== req.user.id) return res.status(403).json({ message: 'You can only delete your own messages' });
+
+    await db.query(`DELETE FROM messages WHERE id = ?`, [req.params.id]);
+
+    const payload = { id: message.id, staffId: message.staffId };
+    if (message.senderRole === 'Admin') emitToUser(message.staffId, 'message:deleted', payload);
+    else emitToAdmin('message:deleted', payload);
+
+    res.json(payload);
+  } catch (err) {
+    console.error('Delete message error:', err);
+    res.status(500).json({ message: 'Failed to delete message' });
   }
 });
 

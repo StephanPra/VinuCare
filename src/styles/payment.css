@@ -71,50 +71,33 @@
 .pm-methods {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
-.pm-method-btn {
+.pm-card-panel {
   display: flex;
   align-items: center;
   gap: 14px;
   width: 100%;
   padding: 14px 16px;
-  border-radius: 14px;
-  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  border: 1px solid var(--border);
   background: var(--lavender-50);
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
   font-family: inherit;
 }
 
-.pm-method-btn:hover:not(:disabled) {
-  border-color: var(--lavender-300);
-  background: var(--lavender-100);
-  transform: translateY(-1px);
-}
-
-.pm-method-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
 .pm-method-icon {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   flex: none;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  color: #fff;
+  color: #5B3FC4;
+  background: #fff;
+  border: 1px solid var(--lavender-200, var(--border));
 }
-
-.pm-icon-card   { background: linear-gradient(135deg, #7C5CE8, #5B3FC4); }
-.pm-icon-paypal { background: linear-gradient(135deg, #1e3a8a, #0f2167); }
-.pm-icon-koko   { background: linear-gradient(135deg, #ff9966, #ff5e62); }
 
 .pm-method-info { flex: 1; }
 
@@ -130,9 +113,42 @@
   margin-top: 2px;
 }
 
-.pm-method-arrow {
+.pm-pay-btn {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: none;
+  background: #5B3FC4;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pm-pay-btn:hover:not(:disabled) {
+  background: #4c32ab;
+}
+
+.pm-pay-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pm-secure-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.76rem;
   color: var(--text-light);
-  font-size: 1.1rem;
+  line-height: 1.5;
+  margin: 2px 2px 0;
+}
+
+.pm-secure-note svg {
+  flex: none;
+  margin-top: 2px;
 }
 
 .pm-back-btn {

@@ -5,6 +5,7 @@ import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
 import { ImageIcon } from '../../components/ui/Icons';
 import Avatar from '../../components/ui/Avatar';
+import Skeleton from '../../components/ui/Skeleton';
 import { AVATAR_PRESETS, AVATAR_PRESET_PREFIX } from '../../lib/avatarPresets';
 
 const MAX_AVATAR_BYTES = 3 * 1024 * 1024; // 3MB — base64-inflated, stays well under the 10mb JSON body limit
@@ -194,7 +195,47 @@ export default function Profile({ onNavigate, setUser }) {
   if (loading) {
     return (
       <div id="page-profile" className="page active">
-        <div className="profile-wrap"><p>Loading your profile…</p></div>
+        <div className="profile-wrap">
+          <div className="profile-card">
+            <div className="profile-header">
+              <Skeleton circle width="58px" height="58px" />
+              <div>
+                <Skeleton width="160px" height="1.6rem" style={{ marginBottom: 8 }} />
+                <Skeleton width="90px" height="1.1rem" radius="999px" />
+              </div>
+            </div>
+            <div className="profile-layout">
+              <div className="profile-col profile-col-left">
+                <div className="profile-section">
+                  <div className="profile-section-head"><h2>Account Information</h2></div>
+                  <div className="profile-info-list">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div className="profile-info-row" key={i}>
+                        <Skeleton width="35%" height="0.85rem" />
+                        <Skeleton width="40%" height="0.85rem" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="profile-col profile-col-right">
+                <div className="profile-section">
+                  <div className="profile-section-head"><h2>Booking History</h2></div>
+                  <div className="profile-history-list">
+                    {[1, 2].map((i) => (
+                      <div className="profile-history-item" key={i}>
+                        <div className="profile-history-main">
+                          <Skeleton width="50%" height="0.95rem" style={{ marginBottom: 6 }} />
+                          <Skeleton width="70%" height="0.8rem" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -399,7 +440,16 @@ export default function Profile({ onNavigate, setUser }) {
                   <h2>Booking History</h2>
                 </div>
                 {historyLoading ? (
-                  <p className="profile-history-empty">Loading your bookings…</p>
+                  <div className="profile-history-list">
+                    {[1, 2].map((i) => (
+                      <div className="profile-history-item" key={i}>
+                        <div className="profile-history-main">
+                          <Skeleton width="50%" height="0.95rem" style={{ marginBottom: 6 }} />
+                          <Skeleton width="70%" height="0.8rem" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : appointments.length === 0 ? (
                   <p className="profile-history-empty">You haven't booked an appointment yet.</p>
                 ) : (
@@ -443,7 +493,16 @@ export default function Profile({ onNavigate, setUser }) {
                   <h2>Payment History</h2>
                 </div>
                 {historyLoading ? (
-                  <p className="profile-history-empty">Loading your payments…</p>
+                  <div className="profile-history-list">
+                    {[1, 2].map((i) => (
+                      <div className="profile-history-item" key={i}>
+                        <div className="profile-history-main">
+                          <Skeleton width="50%" height="0.95rem" style={{ marginBottom: 6 }} />
+                          <Skeleton width="60%" height="0.8rem" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : paymentHistory.length === 0 ? (
                   <p className="profile-history-empty">No payments yet.</p>
                 ) : (

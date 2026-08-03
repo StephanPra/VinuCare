@@ -38,6 +38,7 @@ import {
 import LeafletMap from '../../components/LeafletMap';
 import { API_BASE_URL } from '../../config/api';
 import ExtraBanners from '../../components/ExtraBanners';
+import Skeleton from '../../components/ui/Skeleton';
 
 // teamData.js is plain data (no JSX allowed there), so its `icon` field is
 // a short key resolved to a real icon component here.
@@ -646,7 +647,21 @@ export default function Home({ onNavigate }) {
         </div>
         <div className="reviews-row">
           {reviewsLoading ? (
-            <p style={{ textAlign: 'center', padding: '20px', color: '#888', width: '100%' }}>Loading reviews…</p>
+            Array.from({ length: 3 }).map((_, i) => (
+              <div className="rev-card" key={i}>
+                <div className="rev-header">
+                  <Skeleton circle width="46px" height="46px" />
+                  <div style={{ flex: 1 }}>
+                    <Skeleton width="60%" height="0.95rem" style={{ marginBottom: 6 }} />
+                    <Skeleton width="40%" height="0.78rem" />
+                  </div>
+                </div>
+                <Skeleton width="90px" height="0.9rem" style={{ margin: '10px 0' }} />
+                <Skeleton width="100%" height="0.85rem" style={{ marginBottom: 6 }} />
+                <Skeleton width="80%" height="0.85rem" style={{ marginBottom: 10 }} />
+                <Skeleton width="70px" height="1.4rem" radius="20px" />
+              </div>
+            ))
           ) : homeReviews.length === 0 ? (
             <p style={{ textAlign: 'center', padding: '20px', color: '#888', width: '100%' }}>No reviews yet. Be the first!</p>
           ) : (

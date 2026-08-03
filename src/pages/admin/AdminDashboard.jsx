@@ -5,6 +5,8 @@ import {
 } from 'recharts';
 import { STATUS_COLORS, PIE_FALLBACK_COLORS, money, shortDate, tooltipProps, axisTick, axisLine } from './chartTheme';
 import ChartCard from './ChartCard';
+import ChartCardSkeleton from './ChartCardSkeleton';
+import SkeletonStatGrid from '../../components/ui/SkeletonStatGrid';
 import AdminUsers from './AdminUsers';
 import AdminProducts from './AdminProducts';
 import AdminAppointments from './AdminAppointments';
@@ -69,6 +71,7 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
   const [lowStockJump, setLowStockJump] = useState(false);
   const [onlineCount, setOnlineCount] = useState(null);
   const [overviewCharts, setOverviewCharts] = useState(null);
+  const [overviewChartsLoading, setOverviewChartsLoading] = useState(true);
 
   const loadSummary = () => {
     setLoading(true);
@@ -94,10 +97,12 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
   // its own live-updating copy of this same endpoint for the dedicated tab.
   useEffect(() => {
     if (tab !== 'overview') return;
+    setOverviewChartsLoading(true);
     fetch(`${API_BASE}/api/admin/analytics`, { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`Server responded ${res.status}`))))
       .then(setOverviewCharts)
-      .catch(() => {}); // Overview quietly shows no charts rather than an extra error banner — the stat cards above already report load failures.
+      .catch(() => {}) // Overview quietly shows no charts rather than an extra error banner — the stat cards above already report load failures.
+      .finally(() => setOverviewChartsLoading(false));
   }, [tab]);
 
   // Live connection lives for the whole dashboard session (not just the
@@ -171,7 +176,7 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
               </div>
             </div>
 
-            {loading && <p>Loading summary…</p>}
+            {loading && <SkeletonStatGrid count={6} />}
             {error && <p style={{ color: 'red' }}>Failed to load summary: {error}</p>}
 
             {!loading && !error && summary && (
@@ -217,7 +222,14 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
               </div>
             )}
 
-            {overviewCharts && (
+            {overviewChartsLoading && (
+              <div className="admin-analytics-grid" style={{ marginBottom: 30 }}>
+                <ChartCardSkeleton height={220} />
+                <ChartCardSkeleton height={220} />
+              </div>
+            )}
+
+            {!overviewChartsLoading && overviewCharts && (
               <div className="admin-analytics-grid" style={{ marginBottom: 30 }}>
                 <ChartCard title="Revenue — last 14 days" dotColor="var(--admin-indigo)">
                   {overviewCharts.revenueByDay.every((d) => d.revenue === 0) ? (

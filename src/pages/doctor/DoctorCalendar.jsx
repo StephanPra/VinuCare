@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
+import Skeleton from '../../components/ui/Skeleton';
 import '../../styles/doctor-calendar.css';
 import { API_BASE_URL } from '../../config/api';
 
@@ -240,8 +241,44 @@ export default function DoctorCalendar() {
     return (
       <div className="vc-cal">
         <div className="vc-cal-grid-wrap">
-          <p className="vc-cal-empty">Loading calendar…</p>
+          <div className="vc-cal-header">
+            <Skeleton width="160px" height="1.4rem" />
+            <Skeleton width="140px" height="2rem" radius="8px" />
+          </div>
+          <div className="vc-cal-weekdays">
+            {WEEKDAY_LABELS.map((label) => (
+              <div key={label} className="vc-cal-weekday">{label}</div>
+            ))}
+          </div>
+          <div className="vc-cal-body">
+            {Array.from({ length: 5 }).map((_, wi) => (
+              <div className="vc-cal-week" key={wi}>
+                {Array.from({ length: 7 }).map((_, di) => (
+                  <div key={di} style={{ padding: 8 }}>
+                    <Skeleton width="100%" height="64px" radius="8px" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
+
+        <aside className="vc-cal-panel">
+          <div className="vc-cal-panel-header">
+            <Skeleton width="140px" height="1.1rem" />
+          </div>
+          <div className="vc-cal-list">
+            {[1, 2, 3].map((i) => (
+              <div className="vc-cal-list-item" key={i}>
+                <Skeleton width="46px" height="0.85rem" />
+                <div className="vc-cal-list-main">
+                  <Skeleton width="60%" height="0.9rem" style={{ marginBottom: 6 }} />
+                  <Skeleton width="80%" height="0.78rem" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </aside>
       </div>
     );
   }

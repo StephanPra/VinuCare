@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../../config/api';
+import SkeletonTableRows from '../../components/ui/SkeletonTableRows';
 
 const API_BASE = `${API_BASE_URL}/api/admin/doctors/scheduling`;
 
@@ -35,10 +36,9 @@ export default function AdminScheduling() {
       </div>
 
       <div className="admin-panel">
-        {loading && <div className="admin-empty">Loading scheduling overview…</div>}
         {error && <div className="admin-error" style={{ color: 'red', padding: '12px' }}>{error}</div>}
 
-        {!loading && !error && (
+        {!error && (
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -49,6 +49,7 @@ export default function AdminScheduling() {
                   <th>Upcoming Blocked Dates</th>
                 </tr>
               </thead>
+              {loading ? <SkeletonTableRows columns={4} /> : (
               <tbody>
                 {doctors.map(d => (
                   <tr key={d.id}>
@@ -63,8 +64,9 @@ export default function AdminScheduling() {
                   </tr>
                 ))}
               </tbody>
+              )}
             </table>
-            {doctors.length === 0 && <div className="admin-empty">No doctors on the roster yet.</div>}
+            {!loading && doctors.length === 0 && <div className="admin-empty">No doctors on the roster yet.</div>}
           </div>
         )}
       </div>

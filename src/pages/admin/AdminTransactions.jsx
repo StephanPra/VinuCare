@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
 import GlassSelect from '../appointments/GlassSelect';
+import SkeletonTableRows from '../../components/ui/SkeletonTableRows';
+import SkeletonStatGrid from '../../components/ui/SkeletonStatGrid';
 
 const API_BASE = `${API_BASE_URL}/api/admin/transactions`;
 const STATUS_OPTIONS = ['Paid', 'Pending', 'Failed', 'Refunded'];
@@ -94,6 +96,7 @@ export default function AdminTransactions() {
         </div>
       </div>
 
+      {loading ? <SkeletonStatGrid count={2} /> : (
       <div className="admin-stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: 20 }}>
         <div className="admin-stat-card">
           <div className="admin-stat-label">Paid (filtered view)</div>
@@ -104,6 +107,7 @@ export default function AdminTransactions() {
           <div className="admin-stat-value">{filtered.length}</div>
         </div>
       </div>
+      )}
 
       <div className="admin-panel">
         <div className="admin-panel-head">
@@ -133,10 +137,9 @@ export default function AdminTransactions() {
           </div>
         </div>
 
-        {loading && <div className="admin-empty">Loading transactions…</div>}
         {error && <div className="admin-error" style={{ color: 'red', padding: '12px' }}>{error}</div>}
 
-        {!loading && !error && (
+        {!error && (
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -151,6 +154,7 @@ export default function AdminTransactions() {
                   <th></th>
                 </tr>
               </thead>
+              {loading ? <SkeletonTableRows columns={8} /> : (
               <tbody>
                 {filtered.map(t => (
                   <tr key={t.id}>
@@ -172,8 +176,9 @@ export default function AdminTransactions() {
                   </tr>
                 ))}
               </tbody>
+              )}
             </table>
-            {filtered.length === 0 && <div className="admin-empty">No transactions match that search.</div>}
+            {!loading && filtered.length === 0 && <div className="admin-empty">No transactions match that search.</div>}
           </div>
         )}
       </div>
