@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useUIFeedback } from '../context/UIFeedbackContext';
 import { useTheme } from '../context/ThemeContext';
 import { API_BASE_URL } from '../config/api';
-import { ImageIcon, SunIcon, MoonIcon } from './ui/Icons';
+import { ImageIcon, SunIcon, MoonIcon, TrashIcon } from './ui/Icons';
 import Avatar from './ui/Avatar';
 import Skeleton from './ui/Skeleton';
 import { AVATAR_PRESETS, AVATAR_PRESET_PREFIX } from '../lib/avatarPresets';
@@ -235,7 +235,7 @@ export default function StaffSettings({ setUser }) {
                   </button>
                   {profile.avatar && (
                     <button type="button" className="avatar-picker-remove-btn" onClick={handleRemoveAvatar} disabled={uploadingAvatar}>
-                      Remove photo
+                      <TrashIcon size={14} /> Remove photo
                     </button>
                   )}
                 </div>

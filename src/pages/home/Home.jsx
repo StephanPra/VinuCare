@@ -129,6 +129,7 @@ export default function Home({ onNavigate }) {
   const { setCurrentCategory, setCurrentBrand } = useContext(ShopContext);
   const [homeReviews, setHomeReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [servicesOpen, setServicesOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/reviews`)
@@ -340,6 +341,27 @@ export default function Home({ onNavigate }) {
         .photo-banner-img { flex: 1 1 280px; min-height: 220px; }
         .photo-banner-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+        .services-toggle-wrap {
+          display: flex; justify-content: center; margin: 0 0 28px;
+        }
+        .services-toggle-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 12px 28px; border-radius: 999px;
+          font-weight: 700; font-size: .95rem;
+          background: var(--lavender-400, #6b21a8); color: #fff; border: none;
+          cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .services-toggle-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(107,33,168,.28); }
+        .services-toggle-chevron { transition: transform .25s ease; display: inline-flex; }
+        .services-toggle-chevron.open { transform: rotate(180deg); }
+        .services-collapse {
+          display: grid;
+          grid-template-rows: 0fr;
+          transition: grid-template-rows .35s ease;
+        }
+        .services-collapse.open { grid-template-rows: 1fr; }
+        .services-collapse > div { overflow: hidden; }
+
         .hero-video {
           position: absolute; inset: 0;
           width: 100%; height: 100%;
@@ -444,32 +466,51 @@ export default function Home({ onNavigate }) {
           <h2>Complete Care for Every Pet</h2>
           <p>From routine wellness exams to specialist treatments, we cover every aspect of your pet's health and wellbeing.</p>
         </div>
-        <div className="photo-banner-list">
-          {servicesBanners.map((svc, i) => (
-            <div
-              key={svc.title}
-              className={`photo-banner${i % 2 === 1 ? ' reverse' : ''}`}
-              style={{ background: svc.bg }}
-              onClick={() => onNavigate('services', svc.id)}
-            >
-              <div className="glass-icon-badge">{svc.icon}</div>
-              <div className="photo-banner-text">
-                <span className="photo-banner-tag">{svc.tag}</span>
-                <h3 style={{ fontSize: 'clamp(1.4rem,2.4vw,1.9rem)', margin: '0 0 8px', lineHeight: 1.2 }}>{svc.title}</h3>
-                <p style={{ opacity: 0.9, margin: '0 0 18px', maxWidth: '380px' }}>{svc.desc}</p>
-                <button
-                  className="btn"
-                  style={{ background: '#fff', color: svc.bg, fontWeight: 700, alignSelf: 'flex-start' }}
-                  onClick={(e) => { e.stopPropagation(); onNavigate('services', svc.id); }}
+        <div className="services-toggle-wrap">
+          <button
+            type="button"
+            className="services-toggle-btn"
+            aria-expanded={servicesOpen}
+            onClick={() => setServicesOpen(o => !o)}
+          >
+            {servicesOpen ? 'View Less' : 'View More'}
+            <span className={`services-toggle-chevron${servicesOpen ? ' open' : ''}`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+          </button>
+        </div>
+        <div className={`services-collapse${servicesOpen ? ' open' : ''}`}>
+          <div>
+            <div className="photo-banner-list">
+              {servicesBanners.map((svc, i) => (
+                <div
+                  key={svc.title}
+                  className={`photo-banner${i % 2 === 1 ? ' reverse' : ''}`}
+                  style={{ background: svc.bg }}
+                  onClick={() => onNavigate('services', svc.id)}
                 >
-                  {svc.cta} →
-                </button>
-              </div>
-              <div className="photo-banner-img">
-                <img src={svc.img} alt={svc.alt} loading="lazy" />
-              </div>
+                  <div className="glass-icon-badge">{svc.icon}</div>
+                  <div className="photo-banner-text">
+                    <span className="photo-banner-tag">{svc.tag}</span>
+                    <h3 style={{ fontSize: 'clamp(1.4rem,2.4vw,1.9rem)', margin: '0 0 8px', lineHeight: 1.2 }}>{svc.title}</h3>
+                    <p style={{ opacity: 0.9, margin: '0 0 18px', maxWidth: '380px' }}>{svc.desc}</p>
+                    <button
+                      className="btn"
+                      style={{ background: '#fff', color: svc.bg, fontWeight: 700, alignSelf: 'flex-start' }}
+                      onClick={(e) => { e.stopPropagation(); onNavigate('services', svc.id); }}
+                    >
+                      {svc.cta} →
+                    </button>
+                  </div>
+                  <div className="photo-banner-img">
+                    <img src={svc.img} alt={svc.alt} loading="lazy" />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
