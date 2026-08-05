@@ -9,6 +9,11 @@ const pool = mysql.createPool({
   user:     process.env.DB_USER     || 'root',
   password: process.env.DB_PASSWORD || 'praweera.789',
   database: process.env.DB_NAME     || 'vinucare',
+  // Azure Database for MySQL rejects plaintext connections
+  // (require_secure_transport=ON); localhost dev servers don't need this.
+  ssl: process.env.DB_HOST && process.env.DB_HOST !== 'localhost'
+    ? { rejectUnauthorized: false }
+    : undefined,
 });
 
 module.exports = pool.promise();
