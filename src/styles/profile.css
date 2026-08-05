@@ -91,11 +91,11 @@
 .avatar-picker-upload-btn:hover:not(:disabled) { background: var(--lavender-50); }
 .avatar-picker-upload-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .avatar-picker-remove-btn {
-  display: block; width: 100%; text-align: left; margin-top: 2px; padding: 6px 2px;
-  background: none; border: none; color: var(--text-light);
-  font-size: 0.8rem; cursor: pointer; border-radius: 8px; transition: background-color .15s ease, color .15s ease;
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; margin-top: 2px; padding: 6px 2px;
+  background: none; border: none; color: #C0392B;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: background-color .15s ease, color .15s ease;
 }
-.avatar-picker-remove-btn:hover:not(:disabled) { background: rgba(229,85,85,0.08); color: #e55; }
+.avatar-picker-remove-btn:hover:not(:disabled) { background: rgba(229,85,85,0.1); color: #e55; }
 .avatar-picker-remove-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .profile-header h1 { margin: 0 0 4px; font-size: 1.3rem; color: var(--text-dark); }

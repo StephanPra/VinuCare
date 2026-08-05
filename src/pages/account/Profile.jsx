@@ -3,7 +3,7 @@ import '../../styles/auth.css';
 import '../../styles/profile.css';
 import { useUIFeedback } from '../../context/UIFeedbackContext';
 import { API_BASE_URL } from '../../config/api';
-import { ImageIcon } from '../../components/ui/Icons';
+import { ImageIcon, TrashIcon } from '../../components/ui/Icons';
 import Avatar from '../../components/ui/Avatar';
 import Skeleton from '../../components/ui/Skeleton';
 import { AVATAR_PRESETS, AVATAR_PRESET_PREFIX } from '../../lib/avatarPresets';
@@ -328,7 +328,7 @@ export default function Profile({ onNavigate, setUser }) {
                   </button>
                   {profile.avatar && (
                     <button type="button" className="avatar-picker-remove-btn" onClick={handleRemoveAvatar} disabled={uploadingAvatar}>
-                      Remove photo
+                      <TrashIcon size={14} /> Remove photo
                     </button>
                   )}
                 </div>
