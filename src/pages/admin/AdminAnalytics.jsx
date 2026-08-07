@@ -15,6 +15,11 @@ import SkeletonStatGrid from '../../components/ui/SkeletonStatGrid';
 
 const API_BASE = API_BASE_URL;
 
+// Every chart here is Recharts: a <ResponsiveContainer> (fills the parent
+// card, no fixed pixel size) wrapping a chart type (Area/Bar/Pie) built
+// from <XAxis>/<YAxis>/<Tooltip>/etc. sub-components. The data itself is
+// just the JSON from GET /api/admin/analytics — Recharts doesn't touch the
+// backend, it only renders whatever array is passed into `data`.
 export default function AdminAnalytics() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);

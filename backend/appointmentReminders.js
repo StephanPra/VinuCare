@@ -7,6 +7,12 @@ const { sendAppointmentReminderEmail } = require('./utils/mailer');
 
 async function runReminderSweep() {
   try {
+    // Three conditions in the WHERE, each guarding against a different
+    // false positive: status='Confirmed' skips Pending/Cancelled bookings;
+    // reminder_sent_at IS NULL stops the same appointment being emailed
+    // again on the next hourly pass once it succeeds; appt_date matching
+    // "tomorrow" (CURDATE() + 1 day) is what makes this a day-before
+    // reminder rather than a same-day one.
     const [rows] = await db.query(
       `SELECT a.id, a.pet_name AS petName, a.service,
               DATE_FORMAT(a.appt_date, '%Y-%m-%d') AS apptDate, a.appt_time AS apptTime,

@@ -27,9 +27,15 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/appointments/doctors`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Server responded ' + res.status);
+        return res.json();
+      })
       .then(data => setDoctors(Array.isArray(data) ? data : []))
-      .catch(() => setDoctors([]))
+      .catch(() => {
+        setDoctors([]);
+        notifyError('Could not load doctors. Please refresh the page or try again later.');
+      })
       .finally(() => setDoctorsLoading(false));
   }, []);
 
@@ -37,7 +43,10 @@ export default function AppointmentForm({ onAppointmentSuccess, initialService, 
   // is selected, so this only needs to load once.
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/appointments/holidays`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Server responded ' + res.status);
+        return res.json();
+      })
       .then(data => setHolidays(Array.isArray(data) ? data : []))
       .catch(() => setHolidays([]));
   }, []);

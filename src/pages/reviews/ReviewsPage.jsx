@@ -11,12 +11,16 @@ import { API_BASE_URL } from "../../config/api";
 function ReviewsPage({ onNavigate, isLoggedIn, setRedirectAfterLogin }) {
   const [allReviews, setAllReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/reviews`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Server responded ' + res.status);
+        return res.json();
+      })
       .then(data => { setAllReviews(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch(() => { setLoading(false); setLoadError(true); });
   }, []);
 
   const handleAddNewReview = (newReview) => {
@@ -38,6 +42,8 @@ function ReviewsPage({ onNavigate, isLoggedIn, setRedirectAfterLogin }) {
         <div className="reviews-full-grid">
           {Array.from({ length: 6 }).map((_, i) => <ReviewCardSkeleton key={i} />)}
         </div>
+      ) : loadError ? (
+        <p style={{ textAlign: 'center', padding: '40px', color: '#888' }}>Couldn't load reviews right now. Please try again later.</p>
       ) : allReviews.length === 0 ? (
         <p style={{ textAlign: 'center', padding: '40px', color: '#888' }}>No reviews yet. Be the first!</p>
       ) : (

@@ -5,6 +5,11 @@ const { emitToAdmin } = require('../socket');
 
 const router = express.Router();
 
+// This file only creates orders and lists a signed-in user's own order
+// history. Refunds are NOT handled here — that's
+// POST /api/admin/transactions/:id/refund in backend/routes/admin.js,
+// which flips the transaction/order status and writes an audit log entry.
+
 // Save order
 router.post('/', auth, async (req, res) => {
   const { total, items } = req.body;

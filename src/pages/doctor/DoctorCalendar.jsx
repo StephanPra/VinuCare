@@ -60,11 +60,12 @@ export default function DoctorCalendar() {
   async function loadHolidays() {
     try {
       const res = await fetch(HOLIDAYS_URL);
-      if (!res.ok) return;
+      if (!res.ok) throw new Error('Server responded ' + res.status);
       const json = await res.json();
       setHolidays(Array.isArray(json) ? json : []);
     } catch (err) {
       console.error('Failed to load holidays:', err);
+      notifyError('Could not load clinic holidays — the calendar may be missing some blocked-out dates.');
     }
   }
 
@@ -87,11 +88,12 @@ export default function DoctorCalendar() {
   async function loadUnavailability() {
     try {
       const res = await fetch(UNAVAILABILITY_URL, { credentials: 'include' });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error('Server responded ' + res.status);
       const json = await res.json();
       setUnavailableDates(Array.isArray(json) ? json : []);
     } catch (err) {
       console.error('Failed to load unavailability:', err);
+      notifyError('Could not load your unavailable dates — the calendar may show incorrect availability.');
     }
   }
 

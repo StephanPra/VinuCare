@@ -73,6 +73,10 @@ export default function AdminDashboard({ onNavigate, adminName = 'Admin', user, 
   const [overviewCharts, setOverviewCharts] = useState(null);
   const [overviewChartsLoading, setOverviewChartsLoading] = useState(true);
 
+  // Plain fetch, not the socket — GET /api/admin/summary returns the 6
+  // numbers below as one JSON object (see the /summary route in
+  // backend/routes/admin.js). credentials:'include' is what sends the
+  // httpOnly auth cookie cross-origin so the request actually authenticates.
   const loadSummary = () => {
     setLoading(true);
     setError(null);

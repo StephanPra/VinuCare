@@ -21,6 +21,11 @@ async function logAction(req, action, entityType, entityId, details = null) {
   }
 }
 
+// Six numbers for the Overview tab's stat cards. Each is its own
+// COUNT/SUM against a single table — kept as separate queries rather than
+// one big join since the tables aren't related to each other (revenue,
+// appointments, doctors, stock, messages), so a join would just be a
+// cross product with no real benefit.
 router.get('/summary', auth, requireRole('Admin'), async (req, res) => {
   try {
     const [[{ totalRevenue }]] = await pool.query(

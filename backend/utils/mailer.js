@@ -56,6 +56,11 @@ async function send(to, subject, html) {
   return data;
 }
 
+// Every template below is a plain JS template literal with inline (not
+// <style>-tag) CSS — no MJML/React Email/handlebars. Email clients like
+// Gmail and Outlook strip <style> blocks and external stylesheets
+// unpredictably, so inline style="" attributes are the only styling that
+// reliably survives across clients.
 async function sendVerificationEmail(to, name, verifyUrl) {
   const subject = 'Verify your VinuCare account';
   const html = `

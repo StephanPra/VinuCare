@@ -129,11 +129,15 @@ export default function Home({ onNavigate }) {
   const { setCurrentCategory, setCurrentBrand } = useContext(ShopContext);
   const [homeReviews, setHomeReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/reviews`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Server responded ' + res.status);
+        return res.json();
+      })
       .then(data => {
         const list = Array.isArray(data) ? data : [];
         const sorted = [...list].sort((a, b) => {
@@ -144,7 +148,10 @@ export default function Home({ onNavigate }) {
         setHomeReviews(sorted.slice(0, 3));
         setReviewsLoading(false);
       })
-      .catch(() => setReviewsLoading(false));
+      .catch(() => {
+        setReviewsLoading(false);
+        setReviewsError(true);
+      });
   }, []);
 
   // Admin-customizable promo banners (Admin > Banners). Falls back to the
@@ -703,6 +710,8 @@ export default function Home({ onNavigate }) {
                 <Skeleton width="70px" height="1.4rem" radius="20px" />
               </div>
             ))
+          ) : reviewsError ? (
+            <p style={{ textAlign: 'center', padding: '20px', color: '#888', width: '100%' }}>Couldn't load reviews right now. Please try again later.</p>
           ) : homeReviews.length === 0 ? (
             <p style={{ textAlign: 'center', padding: '20px', color: '#888', width: '100%' }}>No reviews yet. Be the first!</p>
           ) : (

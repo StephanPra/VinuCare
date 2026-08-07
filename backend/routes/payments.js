@@ -5,6 +5,10 @@ const auth    = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
+// Only PayHere is actually integrated in this file (checkout-hash route +
+// notify webhook below). Koko (BNPL) further down is a stub that always
+// returns 501 — there is no PayPal integration anywhere in this codebase.
+
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
