@@ -354,8 +354,15 @@ router.post('/google', authLimiter, async (req, res) => {
 
       // Fire-and-forget — the welcome email is a courtesy, not a gate, so
       // it shouldn't block or fail the sign-in response if SMTP is slow.
+      // console.warn (not console.error) on purpose: console.error is
+      // globally patched (see errorLog.js) to persist and push a live
+      // alert to the admin dashboard, and a missed courtesy email isn't
+      // an actionable system error — especially the expected Resend
+      // sandbox rejection for any recipient but the account owner's own
+      // address (see mailer.js's FROM comment), which would otherwise
+      // fire on every teammate's/examiner's Google sign-in.
       sendWelcomeEmail(user.email, user.name).catch((err) => {
-        console.error('Welcome email failed:', err.message);
+        console.warn('Welcome email failed:', err.message);
       });
     } else if (!user.google_id) {
       // Existing password account signing in with Google for the first
